@@ -1,19 +1,28 @@
 import React from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './App.css';
-
-import NavigationBar from './components/Navbar';
-import HeroSection from './components/HeroSection';
-import FeaturedAlbums from './components/FeaturedAlbums';
-import Footer from './components/Footer';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Login from './components/Login';
+import Register from './components/Register';
+import Home from './components/Home';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const App = () => (
-  <div className="App">
-    <NavigationBar />
-    <HeroSection />
-    <FeaturedAlbums />
-    <Footer />
-  </div>
+  <AuthProvider>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </Router>
+  </AuthProvider>
 );
 
 export default App;
