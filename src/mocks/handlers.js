@@ -1,28 +1,25 @@
-// src/mocks/handlers.js
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 export const handlers = [
-  rest.post('/login', async (req, res, ctx) => {
-    const { username, password } = await req.json();
+  http.post('/login', async ({ request }) => {
+    const { username, password } = await request.json();
+
+    console.log('🛠 MSW recibió:', { username, password });
 
     if (username === 'admin' && password === 'admin123') {
-      return res(
-        ctx.status(200),
-        ctx.json({
-          token: 'mock-token',
-          role: 'admin'
-        })
+      return HttpResponse.json(
+        { token: 'mock-token', role: 'admin' },
+        { status: 200 }
       );
     }
 
-    return res(
-      ctx.status(401),
-      ctx.json({
-        error: 'Credenciales inválidas'
-      })
+    return HttpResponse.json(
+      { error: 'Credenciales inválidas' },
+      { status: 401 }
     );
   }),
 ];
+
 
 
 
