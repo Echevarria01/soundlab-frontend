@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const Login = () => {
+export default function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -8,18 +8,18 @@ const Login = () => {
     e.preventDefault();
 
     const response = await fetch("/login", { 
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ username, password }),
-});
-
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    });
 
     if (response.ok) {
       const data = await response.json();
       localStorage.setItem("token", data.token);
       alert("Inicio de sesión exitoso.");
+      if (onLogin) onLogin(data.token);
     } else {
       alert("Credenciales inválidas.");
     }
@@ -57,6 +57,5 @@ const Login = () => {
       </form>
     </div>
   );
-};
+}
 
-export default Login;

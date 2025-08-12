@@ -4,17 +4,31 @@ export const handlers = [
   http.post('/login', async ({ request }) => {
     const { username, password } = await request.json();
 
-    console.log('🛠 MSW recibió:', { username, password });
-
     if (username === 'admin' && password === 'admin123') {
       return HttpResponse.json(
-        { token: 'mock-token', role: 'admin' },
+        { token: 'mock-token-123', role: 'admin' },
         { status: 200 }
       );
     }
 
     return HttpResponse.json(
-      { error: 'Credenciales inválidas' },
+      { message: 'Credenciales inválidas' },
+      { status: 401 }
+    );
+  }),
+
+  http.get('/protected-data', async ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+
+    if (authHeader === 'Bearer mock-token-123') {
+      return HttpResponse.json(
+        { secret: 'Este es un dato protegido', time: new Date().toISOString() },
+        { status: 200 }
+      );
+    }
+
+    return HttpResponse.json(
+      { message: 'No autorizado' },
       { status: 401 }
     );
   }),
