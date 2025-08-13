@@ -1,34 +1,33 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function Login() {
+export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("user");
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
-    const response = await fetch("/login", {
+    const response = await fetch("/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, role }),
     });
 
     if (response.ok) {
-      const data = await response.json();
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
-      navigate("/dashboard");
+      alert("Registro exitoso. Ahora puedes iniciar sesión.");
+      navigate("/login");
     } else {
-      alert("Credenciales inválidas.");
+      alert("Error en el registro.");
     }
   };
 
   return (
     <div className="container mt-5" style={{ maxWidth: "400px" }}>
-      <h2 className="text-center mb-4">Iniciar sesión en SoundLab</h2>
-      <form onSubmit={handleLogin}>
+      <h2 className="text-center mb-4">Registro en SoundLab</h2>
+      <form onSubmit={handleRegister}>
         <div className="mb-3">
           <label className="form-label">Usuario</label>
           <input
@@ -51,8 +50,20 @@ export default function Login() {
           />
         </div>
 
-        <button type="submit" className="btn btn-primary w-100">
-          Entrar
+        <div className="mb-3">
+          <label className="form-label">Rol</label>
+          <select
+            className="form-control"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            <option value="user">Usuario</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+
+        <button type="submit" className="btn btn-success w-100">
+          Registrarse
         </button>
       </form>
     </div>
