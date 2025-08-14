@@ -1,92 +1,126 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import banner1 from "../assets/banners/banner1.jpg";
+import banner2 from "../assets/banners/banner2.jpg";
+import banner3 from "../assets/banners/banner3.jpg";
+import banner4 from "../assets/banners/banner4.jpg";
+import banner5 from "../assets/banners/banner5.jpg";
+import banner6 from "../assets/banners/banner6.jpg";
+import banner7 from "../assets/banners/banner7.jpg";
+import banner8 from "../assets/banners/banner8.jpg";
+import banner9 from "../assets/banners/banner9.jpg";
+import banner10 from "../assets/banners/banner10.jpg";
+import logo from "../assets/logo/soundlab.png";
 
 export default function Home() {
-  const productos = [
-    {
-      id: 1,
-      nombre: "Guitarra Eléctrica Fender",
-      descripcion: "Sonido profesional para todos los estilos musicales.",
-      precio: 1200,
-      imagen: "https://images.unsplash.com/photo-1511379938547-c1f69419868d",
-    },
-    {
-      id: 2,
-      nombre: "Controladora DJ Pioneer",
-      descripcion: "Ideal para mezclas en vivo y sets profesionales.",
-      precio: 950,
-      imagen: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4",
-    },
-    {
-      id: 3,
-      nombre: "Batería Electrónica Roland",
-      descripcion: "Compacta, silenciosa y con sonidos realistas.",
-      precio: 750,
-      imagen: "https://images.unsplash.com/photo-1587732560916-3f9a0f47b1b1",
-    },
+  const imagenes = [
+    banner1, banner2, banner3, banner4, banner5,
+    banner6, banner7, banner8, banner9, banner10
   ];
 
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const intervalo = setInterval(() => {
+      setIndex((prevIndex) => (prevIndex + 1) % imagenes.length);
+    }, 6000);
+    return () => clearInterval(intervalo);
+  }, []);
+
   return (
-    <>
-      {/* Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div className="container">
-          <Link className="navbar-brand fw-bold" to="/">🎵 SoundLab</Link>
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          
-          <div className="collapse navbar-collapse" id="menu">
-            <form className="d-flex mx-auto my-2 my-lg-0 w-50">
-              <input className="form-control me-2" type="search" placeholder="Buscar productos..." />
-              <button className="btn btn-outline-light" type="submit">Buscar</button>
-            </form>
-            <ul className="navbar-nav ms-auto">
-              <li className="nav-item"><Link className="nav-link" to="/login">Iniciar Sesión</Link></li>
-              <li className="nav-item"><Link className="nav-link" to="/registro">Registrarse</Link></li>
-              <li className="nav-item position-relative">
-                <Link className="nav-link" to="/carrito">
-                  🛍 Carrito
-                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">2</span>
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
+    <div>
+      <div
+        className="text-center py-5 position-relative"
+        style={{
+          minHeight: "60vh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: "20px",
+          overflow: "hidden",
+          position: "relative"
+        }}
+      >
+        {/* Fondos con fade independiente */}
+        {imagenes.map((img, i) => (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: `url(${img})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: i === index ? 1 : 0,
+              transition: "opacity 2s ease-in-out",
+            }}
+          ></div>
+        ))}
 
-      {/* Banner */}
-      <div className="bg-primary text-white text-center py-5">
-        <h1 className="display-4">Bienvenido a SoundLab</h1>
-        <p>Instrumentos musicales y equipos de DJ a tu alcance</p>
-        <a href="#productos" className="btn btn-light btn-lg">Ver productos</a>
+        {/* Logo (flota siempre) */}
+        <div
+          style={{
+            backgroundColor: "rgba(0,0,0,0.5)",
+            padding: "25px",
+            borderRadius: "15px",
+            zIndex: 2
+          }}
+        >
+          <img
+            src={logo}
+            alt="SoundLab Logo"
+            style={{
+              width: "450px",
+              animation: "float 3s ease-in-out infinite"
+            }}
+          />
+        </div>
+
+        {/* Tienda Oficial */}
+        <p
+          style={{
+            color: "white",
+            fontSize: "1.2rem",
+            fontWeight: "600",
+            backgroundColor: "rgba(0,0,0,0.4)",
+            padding: "8px 16px",
+            borderRadius: "10px",
+            zIndex: 2
+          }}
+        >
+          Tienda Oficial
+        </p>
+
+        {/* Texto principal */}
+        <p
+          style={{
+            color: "white",
+            fontSize: "1.5rem",
+            fontWeight: "500",
+            backgroundColor: "rgba(0,0,0,0.4)",
+            padding: "10px 20px",
+            borderRadius: "10px",
+            zIndex: 2
+          }}
+        >
+          Instrumentos, Audio Y Accesorios.
+        </p>
       </div>
 
-      {/* Productos */}
-      <div id="productos" className="container mt-5">
-        <h2 className="mb-4 text-center">Productos Destacados</h2>
-        <div className="row">
-          {productos.map((producto) => (
-            <div className="col-md-4 mb-4" key={producto.id}>
-              <div className="card h-100 shadow-sm">
-                <img
-                  src={producto.imagen}
-                  className="card-img-top"
-                  alt={producto.nombre}
-                />
-                <div className="card-body">
-                  <h5 className="card-title">{producto.nombre}</h5>
-                  <p className="card-text">{producto.descripcion}</p>
-                  <p className="fw-bold">${producto.precio}</p>
-                  <Link to={`/producto/${producto.id}`} className="btn btn-primary">
-                    Ver más
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </>
+      <style>
+        {`
+          @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+          }
+        `}
+      </style>
+    </div>
   );
 }
+
+
+
+
+

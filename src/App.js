@@ -9,7 +9,8 @@ import Registro from "./pages/Registro";
 import Carrito from "./pages/Carrito";
 import Checkout from "./pages/Checkout";
 import Dashboard from "./pages/Dashboard";
-import Producto from "./pages/Producto";
+import Productos from "./pages/Productos";
+
 import ProductoDetalle from "./pages/ProductoDetalle";
 
 export default function App() {
@@ -33,7 +34,8 @@ export default function App() {
             element={token ? <Dashboard /> : <Navigate to="/login" />}
           />
 
-          <Route path="/productos" element={<Producto />} />
+          <Route path="/productos" element={<Productos />} />
+
           <Route path="/producto/:id" element={<ProductoDetalle />} />
         </Routes>
       </main>

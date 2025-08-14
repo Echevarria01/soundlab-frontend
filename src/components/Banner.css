@@ -1,0 +1,15 @@
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+  100% { transform: translateY(0px); }
+}
+
+.logo-float {
+  animation: float 3s ease-in-out infinite;
+  border: 15px solid transparent;
+  border-image: url("../assets/texturas/madera.jpg") 40 round;
+  border-radius: 20px;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+}
