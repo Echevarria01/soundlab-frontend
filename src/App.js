@@ -10,15 +10,15 @@ import Carrito from "./pages/Carrito";
 import Checkout from "./pages/Checkout";
 import Dashboard from "./pages/Dashboard";
 import Productos from "./pages/Productos";
-
 import ProductoDetalle from "./pages/ProductoDetalle";
 
 export default function App() {
-  const token = localStorage.getItem("token"); // 📌 Para proteger rutas
+  const token = localStorage.getItem("token"); // 📌 Leer token para controlar acceso
 
   return (
     <Router>
-      <Navbar />
+      {/* Pasamos el token al Navbar */}
+      <Navbar token={token} />
 
       <main className="flex-grow-1">
         <Routes>
@@ -35,7 +35,6 @@ export default function App() {
           />
 
           <Route path="/productos" element={<Productos />} />
-
           <Route path="/producto/:id" element={<ProductoDetalle />} />
         </Routes>
       </main>
