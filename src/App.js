@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext, AuthProvider } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -12,37 +14,46 @@ import Dashboard from "./pages/Dashboard";
 import Productos from "./pages/Productos";
 import ProductoDetalle from "./pages/ProductoDetalle";
 
+// ✅ Ruta protegida
+function PrivateRoute({ children }) {
+  const { user, loading } = useContext(AuthContext);
+  if (loading) return <div className="text-center mt-5">Cargando...</div>;
+  return user ? children : <Navigate to="/login" />;
+}
+
 export default function App() {
-  const token = localStorage.getItem("token"); // 📌 Leer token para controlar acceso
-
   return (
-    <Router>
-      {/* Pasamos el token al Navbar */}
-      <Navbar token={token} />
+    <AuthProvider>
+      <Router>
+        <Navbar />
+        <main className="flex-grow-1">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/registro" element={<Registro />} />
+            <Route path="/carrito" element={<Carrito />} />
+            <Route path="/checkout" element={<Checkout />} />
+            
+            {/* Ruta protegida */}
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <Dashboard />
+                </PrivateRoute>
+              }
+            />
 
-      <main className="flex-grow-1">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/registro" element={<Registro />} />
-          <Route path="/carrito" element={<Carrito />} />
-          <Route path="/checkout" element={<Checkout />} />
-          
-          {/* Ruta protegida */}
-          <Route
-            path="/dashboard"
-            element={token ? <Dashboard /> : <Navigate to="/login" />}
-          />
-
-          <Route path="/productos" element={<Productos />} />
-          <Route path="/producto/:id" element={<ProductoDetalle />} />
-        </Routes>
-      </main>
-
-      <Footer />
-    </Router>
+            <Route path="/productos" element={<Productos />} />
+            <Route path="/producto/:id" element={<ProductoDetalle />} />
+          </Routes>
+        </main>
+        <Footer />
+      </Router>
+    </AuthProvider>
   );
 }
+
 
 
 

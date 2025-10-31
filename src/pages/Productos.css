@@ -1,4 +1,4 @@
-/* Modal de checkout */
+/* -------------------- MODAL DE CHECKOUT -------------------- */
 .modal-checkout-backdrop {
   position: fixed;
   top: 0;
@@ -100,7 +100,8 @@
 .btn-cancelar:hover {
   transform: scale(1.03);
 }
-/* Side Cart */
+
+/* -------------------- SIDE CART -------------------- */
 .side-cart-backdrop {
   position: fixed;
   top: 0;
@@ -122,6 +123,70 @@
   overflow-y: auto;
   box-shadow: -3px 0 10px rgba(0,0,0,0.2);
 }
+
+/* -------------------- PRODUCTOS -------------------- */
+.producto-card-wrapper {
+  opacity: 0;
+  transform: translateY(15px);
+  animation: fadeInUp 0.5s forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.producto-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.producto-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.producto-img-container {
+  overflow: hidden;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.producto-img {
+  transition: transform 0.3s ease;
+}
+
+.producto-img-container:hover .producto-img {
+  transform: scale(1.05);
+}
+
+/* -------------------- INPUTS DE CANTIDAD -------------------- */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* -------------------- ANIMACIONES -------------------- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* -------------------- BOTONES -------------------- */
+.btn-primary {
+  transition: transform 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+}
+
 
 
 
