@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from "react";
+import API from "../api/api"; // usa axios configurado
 
 export const AuthContext = createContext();
 
@@ -7,38 +8,47 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token") || null);
   const [loading, setLoading] = useState(false);
 
-  // Mantener sesión aunque refresques la página
+  // 🔁 Verificar sesión al iniciar la app
   useEffect(() => {
     if (token) {
-      fetch("/api/me", {
-        headers: { "Authorization": `Bearer ${token}` },
-      })
-        .then(res => res.json())
-        .then(data => setUser(data.user))
+      API.get("/user/profile/") // o el endpoint que tengas en el backend
+        .then((res) => setUser(res.data))
         .catch(() => logout());
     }
   }, [token]);
 
+  // 🔐 Login con backend Django REST
   const login = async (username, password) => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
+  setLoading(true);
+  try {
+    const res = await fetch("http://127.0.0.1:8000/api/token/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Error en login");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Error en login");
 
-      setToken(data.token);
-      localStorage.setItem("token", data.token);
-      setUser(data.user);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Guardamos tokens
+    localStorage.setItem("token", data.access);
+    localStorage.setItem("refreshToken", data.refresh);
+    setToken(data.access);
 
+    // Opcional: pedir datos del usuario autenticado
+    const profileRes = await fetch("http://127.0.0.1:8000/api/user/profile/", {
+      headers: { Authorization: `Bearer ${data.access}` },
+    });
+    const userData = await profileRes.json();
+    setUser(userData);
+
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // 🚪 Logout
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -51,4 +61,5 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
 

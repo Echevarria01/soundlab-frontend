@@ -1,58 +1,160 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useContext } from "react";
-import { AuthContext, AuthProvider } from "./context/AuthContext";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-
-// Pages
-import Home from "./pages/Home";
+import React, { useContext, useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from "react-router-dom";
+import { CarritoProvider } from "./context/CarritoContext";
+import { AuthProvider, AuthContext } from "./context/AuthContext";
 import Login from "./pages/Login";
-import Registro from "./pages/Registro";
-import Carrito from "./pages/Carrito";
+import ProductosPage from "./pages/Productos";
 import Checkout from "./pages/Checkout";
-import Dashboard from "./pages/Dashboard";
-import Productos from "./pages/Productos";
-import ProductoDetalle from "./pages/ProductoDetalle";
+import PedidosPage from "./pages/PedidosPage"; // ✅ Historial de pedidos
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./pages/Productos.css";
+import API from "./api/api";
 
-// ✅ Ruta protegida
+// -------------------- COMPONENTE PROTEGIDO --------------------
 function PrivateRoute({ children }) {
-  const { user, loading } = useContext(AuthContext);
-  if (loading) return <div className="text-center mt-5">Cargando...</div>;
-  return user ? children : <Navigate to="/login" />;
+  const { token } = useContext(AuthContext);
+  return token ? children : <Navigate to="/login" />;
 }
 
-export default function App() {
+// -------------------- APP PRINCIPAL --------------------
+function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Navbar />
-        <main className="flex-grow-1">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/registro" element={<Registro />} />
-            <Route path="/carrito" element={<Carrito />} />
-            <Route path="/checkout" element={<Checkout />} />
-            
-            {/* Ruta protegida */}
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
+      <CarritoProvider>
+        <Router>
+          <div className="container py-5">
+            <Header />
+            <Routes>
+              {/* Login */}
+              <Route path="/login" element={<LoginRedirect />} />
 
-            <Route path="/productos" element={<Productos />} />
-            <Route path="/producto/:id" element={<ProductoDetalle />} />
-          </Routes>
-        </main>
-        <Footer />
-      </Router>
+              {/* Productos protegidos */}
+              <Route
+                path="/productos"
+                element={
+                  <PrivateRoute>
+                    <ProductosLoader />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Checkout protegido */}
+              <Route
+                path="/checkout"
+                element={
+                  <PrivateRoute>
+                    <CheckoutRedirect />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* ✅ Historial de pedidos protegido */}
+              <Route
+                path="/pedidos"
+                element={
+                  <PrivateRoute>
+                    <PedidosPage />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Redirección por defecto */}
+              <Route path="*" element={<Navigate to="/productos" />} />
+            </Routes>
+          </div>
+        </Router>
+      </CarritoProvider>
     </AuthProvider>
   );
 }
+
+// -------------------- HEADER --------------------
+function Header() {
+  const { token, logout } = useContext(AuthContext);
+
+  return (
+    <header className="d-flex justify-content-between mb-4 align-items-center">
+      <h2>🎸 SoundLab Store</h2>
+      {token && (
+        <nav className="d-flex gap-3 align-items-center">
+          <Link to="/productos" className="btn btn-outline-primary">
+            Productos
+          </Link>
+          <Link to="/checkout" className="btn btn-outline-success">
+            Checkout
+          </Link>
+          <Link to="/pedidos" className="btn btn-outline-secondary">
+            Mis pedidos
+          </Link>
+          <button className="btn btn-outline-danger" onClick={logout}>
+            Cerrar sesión
+          </button>
+        </nav>
+      )}
+    </header>
+  );
+}
+
+// -------------------- LOGIN REDIRECT --------------------
+function LoginRedirect() {
+  const { token } = useContext(AuthContext);
+  return token ? <Navigate to="/productos" /> : <Login />;
+}
+
+// -------------------- PRODUCTOS CON FETCH --------------------
+function ProductosLoader() {
+  const [productos, setProductos] = useState([]);
+
+  useEffect(() => {
+    const fetchProductos = async () => {
+      try {
+        const response = await API.get("/products/");
+        setProductos(
+          response.data.map((item) => ({
+            id: item.id,
+            nombre: item.name || item.nombre,
+            precio: parseFloat(item.price || item.precio),
+            categoria: item.category?.name || item.categoria,
+            imagen: item.image || item.imagen,
+          }))
+        );
+      } catch (error) {
+        console.error("Error al cargar productos:", error);
+      }
+    };
+
+    fetchProductos();
+  }, []);
+
+  return <ProductosPage productos={productos} />;
+}
+
+// -------------------- CHECKOUT CON REDIRECCIÓN --------------------
+function CheckoutRedirect() {
+  const navigate = useNavigate();
+  const [pedidoCompletado, setPedidoCompletado] = useState(false);
+
+  // Escucha el localStorage por si el pedido se marca como completado
+  useEffect(() => {
+    const handlePedidoCompleto = () => {
+      const flag = localStorage.getItem("pedidoCompleto");
+      if (flag === "true") {
+        localStorage.removeItem("pedidoCompleto");
+        navigate("/pedidos");
+      }
+    };
+    window.addEventListener("storage", handlePedidoCompleto);
+    return () => window.removeEventListener("storage", handlePedidoCompleto);
+  }, [navigate]);
+
+  return <Checkout setPedidoCompletado={setPedidoCompletado} />;
+}
+
+export default App;
+
+
+
+
 
 
 

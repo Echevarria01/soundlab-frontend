@@ -1,34 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const { login, loading } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    const response = await fetch("/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
-      navigate("/dashboard");
-    } else {
-      alert("Credenciales inválidas.");
+    try {
+      await login(username, password);
+      navigate("/productos");
+    } catch (err) {
+      setError("Credenciales inválidas. Intenta nuevamente.");
     }
   };
 
   return (
     <div className="container mt-5" style={{ maxWidth: "400px" }}>
-      <h2 className="text-center mb-4">Iniciar sesión en SoundLab</h2>
-      <form onSubmit={handleLogin}>
+      <h2 className="text-center mb-4">🎸 Iniciar sesión en SoundLab</h2>
+
+      <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <label className="form-label">Usuario</label>
           <input
@@ -51,11 +48,16 @@ export default function Login() {
           />
         </div>
 
-        <button type="submit" className="btn btn-primary w-100">
-          Entrar
+        {error && <div className="alert alert-danger">{error}</div>}
+
+        <button
+          type="submit"
+          className="btn btn-primary w-100"
+          disabled={loading}
+        >
+          {loading ? "Ingresando..." : "Entrar"}
         </button>
       </form>
     </div>
   );
 }
-
