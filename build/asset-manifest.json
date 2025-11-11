@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.css": "/static/css/main.515bfbbb.css",
+    "main.js": "/static/js/main.9c191683.js",
+    "static/media/banner4.jpg": "/static/media/banner4.40814e2667d1409a8158.jpg",
+    "static/media/soundlab.png": "/static/media/soundlab.b84ea1fc05e4347e261d.png",
+    "static/media/banner9.jpg": "/static/media/banner9.5bfa5dc1f798c40b6842.jpg",
+    "static/media/banner5.jpg": "/static/media/banner5.a4e2cc96554bf1df96bf.jpg",
+    "static/media/banner10.jpg": "/static/media/banner10.4d1e5102c63b4babc5db.jpg",
+    "static/media/banner1.jpg": "/static/media/banner1.b21ab1f07e1407aae557.jpg",
+    "static/media/banner2.jpg": "/static/media/banner2.5edf2d2717c8a53ae2a9.jpg",
+    "static/media/banner3.jpg": "/static/media/banner3.676824b27d3aeb6fbaa4.jpg",
+    "static/media/banner7.jpg": "/static/media/banner7.74f15a15b60eb6da5d2a.jpg",
+    "static/media/banner8.jpg": "/static/media/banner8.5dff8f92b38b0e6ffeae.jpg",
+    "static/media/banner6.jpg": "/static/media/banner6.563c93abd9416d5b4098.jpg",
+    "index.html": "/index.html",
+    "main.515bfbbb.css.map": "/static/css/main.515bfbbb.css.map",
+    "main.9c191683.js.map": "/static/js/main.9c191683.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.515bfbbb.css",
+    "static/js/main.9c191683.js"
+  ]
+}
