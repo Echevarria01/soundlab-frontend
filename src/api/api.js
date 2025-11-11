@@ -1,15 +1,20 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:8000/api",
-  withCredentials: true, // importante si el backend usa cookies
+  baseURL: "http://127.0.0.1:8000/api",
 });
 
-// Interceptor para enviar token si usas Bearer
-API.interceptors.request.use(config => {
+// 🔑 Interceptor para incluir el token automáticamente
+API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
 export default API;
+
+
+
+

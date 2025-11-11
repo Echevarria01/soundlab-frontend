@@ -13,3 +13,17 @@
   background-color: rgba(255, 255, 255, 0.15);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
 }
+
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: #0a0a0a;
+}
+
+input.form-control:focus {
+  box-shadow: 0 0 8px rgba(100, 100, 255, 0.4);
+  border-color: #6c63ff;
+}
+
+.btn:focus {
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}

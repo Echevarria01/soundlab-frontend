@@ -197,5 +197,45 @@ input::-webkit-inner-spin-button {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
+.producto-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.producto-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.producto-img-container {
+  overflow: hidden;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.producto-img {
+  transition: transform 0.4s ease;
+}
+
+.producto-card:hover .producto-img {
+  transform: scale(1.1);
+}
 
 
+.producto-card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.producto-img:hover {
+  transform: scale(1.05);
+}
+
+.card-title {
+  font-size: 1rem;
+}
+
+.btn-outline-primary:hover {
+  color: #fff;
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}

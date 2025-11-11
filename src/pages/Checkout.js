@@ -1,185 +1,274 @@
+// pages/Checkout.js
 import React, { useContext, useState } from "react";
 import { CarritoContext } from "../context/CarritoContext";
 import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import API from "../api/api";
 
 export default function Checkout() {
-  const { carrito, setCarrito, historialPedidos, setHistorialPedidos } =
+  const { carrito, limpiarCarrito, eliminarDelCarrito, setHistorialPedidos } =
     useContext(CarritoContext);
-  const { token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    shipping_name: "",
+  const [shippingData, setShippingData] = useState({
+    shipping_name: user?.username || "",
     shipping_address: "",
     shipping_city: "",
     shipping_phone: "",
-    payment_method: "Tarjeta",
-    invoice_type: "A",
+    payment_method: "transfer", // 🔹 coincide con backend
+    card_number: "",
+    card_expiry: "",
+    card_cvv: "",
   });
-
-  const [mensaje, setMensaje] = useState("");
   const [loading, setLoading] = useState(false);
-  const [pedidoConfirmado, setPedidoConfirmado] = useState(null);
+  const [error, setError] = useState("");
 
-  // -------------------- MANEJADORES --------------------
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setShippingData({ ...shippingData, [e.target.name]: e.target.value });
   };
+
+  const total = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  setError("");
 
-    if (carrito.length === 0) {
-      setMensaje("❌ El carrito está vacío.");
-      return;
+  if (!token) return setError("Debes iniciar sesión para confirmar el pedido.");
+  if (carrito.length === 0) return setError("El carrito está vacío.");
+
+  const {
+    shipping_name,
+    shipping_address,
+    shipping_city,
+    shipping_phone,
+    payment_method,
+  } = shippingData;
+
+  if (!shipping_name || !shipping_address || !shipping_city || !shipping_phone || !payment_method) {
+    return setError("Debes completar todos los datos de envío y método de pago.");
+  }
+
+  setLoading(true);
+  try {
+    const items = carrito.map((item) => ({
+      product: item.id,
+      quantity: item.cantidad,
+    }));
+
+    const response = await API.post(
+      "/orders/",
+      {
+        shipping_name,
+        shipping_address,
+        shipping_city,
+        shipping_phone,
+        payment_method,
+        items,
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (response.status === 201 || response.status === 200) {
+      const nuevoPedido = response.data;
+
+      setHistorialPedidos((prev) => [...prev, nuevoPedido]);
+      localStorage.setItem(
+        "pedidos",
+        JSON.stringify([
+          ...JSON.parse(localStorage.getItem("pedidos") || "[]"),
+          nuevoPedido,
+        ])
+      );
+
+      limpiarCarrito();
+      navigate("/confirmacion-compra", { state: { pedido: nuevoPedido } });
+    } else {
+      setError("❌ No se pudo registrar el pedido. Intenta nuevamente.");
     }
+  } catch (err) {
+    console.error(err);
+    setError("❌ Error al conectar con el servidor.");
+  } finally {
+    setLoading(false);
+  }
+};
 
-    const orderData = {
-      ...formData,
-      items: carrito.map((p) => ({
-        product: p.id,
-        quantity: p.cantidad || 1,
-        price: p.precio || p.price,
-      })),
-    };
 
-    setLoading(true);
-    setMensaje("");
-    setPedidoConfirmado(null);
+  if (carrito.length === 0) {
+    return (
+      <div className="container mt-5 text-center">
+        <h3>Tu carrito está vacío 🛒</h3>
+      </div>
+    );
+  }
 
-    try {
-      // ✅ Enviar pedido al backend Django
-      const response = await API.post("/orders/", orderData, {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-      });
-
-      const data = response.data;
-
-      // ✅ Actualizar historial local y contexto
-      const nuevoHistorial = [...historialPedidos, data];
-      setHistorialPedidos(nuevoHistorial);
-      localStorage.setItem("pedidos", JSON.stringify(nuevoHistorial));
-
-      // ✅ Vaciar carrito
-      setCarrito([]);
-      localStorage.removeItem("carrito");
-
-      setMensaje(`✅ Pedido realizado con éxito. N° de orden: ${data.id}`);
-      setPedidoConfirmado(data);
-    } catch (err) {
-      console.error(err);
-      const errorMsg =
-        err.response?.data?.detail ||
-        err.response?.data?.error ||
-        "Error al crear el pedido";
-      setMensaje(`❌ ${errorMsg}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // -------------------- UI --------------------
   return (
     <div className="container mt-4">
-      <h2>Finalizar compra</h2>
-      <p>Total de productos: {carrito.length}</p>
+      <h2>🧾 Finalizar compra</h2>
+      <div className="row">
+        <div className="col-md-6">
+          <form onSubmit={handleSubmit}>
+            {/* --- Datos de envío --- */}
+            <div className="mb-3">
+              <label className="form-label">Nombre completo</label>
+              <input
+                type="text"
+                name="shipping_name"
+                className="form-control"
+                value={shippingData.shipping_name}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-      <form onSubmit={handleSubmit} className="mt-3">
-        <div className="mb-3">
-          <label className="form-label">Nombre completo</label>
-          <input
-            type="text"
-            className="form-control"
-            name="shipping_name"
-            value={formData.shipping_name}
-            onChange={handleChange}
-            required
-          />
+            <div className="mb-3">
+              <label className="form-label">Dirección</label>
+              <input
+                type="text"
+                name="shipping_address"
+                className="form-control"
+                value={shippingData.shipping_address}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Ciudad</label>
+              <input
+                type="text"
+                name="shipping_city"
+                className="form-control"
+                value={shippingData.shipping_city}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Teléfono</label>
+              <input
+                type="text"
+                name="shipping_phone"
+                className="form-control"
+                value={shippingData.shipping_phone}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            {/* --- Método de pago --- */}
+            <div className="mb-3">
+              <label className="form-label">Método de pago</label>
+              <select
+                name="payment_method"
+                className="form-select"
+                value={shippingData.payment_method}
+                onChange={handleChange}
+              >
+                <option value="transfer">Transferencia bancaria</option>
+                <option value="credit_card">Tarjeta de crédito</option>
+                <option value="debit_card">Tarjeta de débito</option>
+                <option value="cash">Efectivo</option>
+              </select>
+            </div>
+
+            {/* --- Campos de tarjeta --- */}
+            {(shippingData.payment_method === "credit_card" ||
+              shippingData.payment_method === "debit_card") && (
+              <>
+                <div className="mb-3">
+                  <label className="form-label">Número de tarjeta</label>
+                  <input
+                    type="text"
+                    name="card_number"
+                    className="form-control"
+                    value={shippingData.card_number}
+                    onChange={handleChange}
+                    placeholder="1234 5678 9012 3456"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Fecha de expiración</label>
+                  <input
+                    type="text"
+                    name="card_expiry"
+                    className="form-control"
+                    value={shippingData.card_expiry}
+                    onChange={handleChange}
+                    placeholder="MM/AA"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">CVV</label>
+                  <input
+                    type="text"
+                    name="card_cvv"
+                    className="form-control"
+                    value={shippingData.card_cvv}
+                    onChange={handleChange}
+                    placeholder="123"
+                  />
+                </div>
+              </>
+            )}
+
+            {error && <div className="alert alert-danger">{error}</div>}
+
+            <button
+              type="submit"
+              className="btn btn-dark w-100"
+              disabled={loading}
+            >
+              {loading ? "Procesando..." : "Confirmar pedido"}
+            </button>
+          </form>
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Dirección</label>
-          <input
-            type="text"
-            className="form-control"
-            name="shipping_address"
-            value={formData.shipping_address}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Ciudad</label>
-          <input
-            type="text"
-            className="form-control"
-            name="shipping_city"
-            value={formData.shipping_city}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Teléfono</label>
-          <input
-            type="text"
-            className="form-control"
-            name="shipping_phone"
-            value={formData.shipping_phone}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Método de pago</label>
-          <select
-            className="form-select"
-            name="payment_method"
-            value={formData.payment_method}
-            onChange={handleChange}
-          >
-            <option value="Tarjeta">Tarjeta</option>
-            <option value="Efectivo">Efectivo</option>
-            <option value="Transferencia">Transferencia</option>
-          </select>
-        </div>
-
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Enviando pedido..." : "Confirmar pedido"}
-        </button>
-      </form>
-
-      {mensaje && <div className="alert alert-info mt-3">{mensaje}</div>}
-
-      {/* ✅ Resumen del pedido confirmado */}
-      {pedidoConfirmado && (
-        <div className="card mt-4 p-3">
-          <h5>Resumen del pedido #{pedidoConfirmado.id}</h5>
-          <ul className="list-group list-group-flush">
-            {pedidoConfirmado.items?.map((item, i) => (
-              <li key={i} className="list-group-item">
-                {item.product_name || `Producto ID ${item.product}`} —{" "}
-                Cantidad: {item.quantity} — ${item.price}
+        {/* --- Resumen del carrito --- */}
+        <div className="col-md-6">
+          <h4>🛍️ Resumen del carrito</h4>
+          <ul className="list-group mb-3">
+            {carrito.map((item) => (
+              <li
+                key={item.id}
+                className="list-group-item d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  {item.nombre} × {item.cantidad}
+                  <button
+                    className="btn btn-sm btn-outline-danger ms-2"
+                    onClick={() => eliminarDelCarrito(item.id)}
+                  >
+                    ❌
+                  </button>
+                </div>
+                <span>${(item.precio * item.cantidad).toFixed(2)}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-3">
-            <strong>Método de pago:</strong> {pedidoConfirmado.payment_method}
-          </p>
-          <p>
-            <strong>Dirección:</strong> {pedidoConfirmado.shipping_address},{" "}
-            {pedidoConfirmado.shipping_city}
-          </p>
+          <h5 className="text-end">Total: ${total.toFixed(2)}</h5>
+          <button
+            className="btn btn-secondary w-100 mt-2"
+            onClick={limpiarCarrito}
+          >
+            Vaciar carrito
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
 
 
 
