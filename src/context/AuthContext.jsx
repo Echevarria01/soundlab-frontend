@@ -1,87 +1,100 @@
-import { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect } from "react";
+import { apiFetch } from "../api";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token") || null);
-  const [loading, setLoading] = useState(false);
-  const [mensaje, setMensaje] = useState("");
+  const [token, setToken] = useState(localStorage.getItem("access") || null);
+  const [refreshToken, setRefreshToken] = useState(
+    localStorage.getItem("refresh") || null
+  );
 
-  // Cargar perfil al iniciar la app si hay token
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!token) return;
-      try {
-        const res = await fetch("http://127.0.0.1:8000/api/user/profile/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("Token inválido");
-        const data = await res.json();
-        setUser(data);
-      } catch {
-        logout();
-      }
-    };
-    fetchProfile();
-  }, [token]);
-
-  // Login
-  const login = async (username, password) => {
-    setLoading(true);
+  // -----------------------------------------------------
+  // LOGIN
+  // -----------------------------------------------------
+  const login = async (email, password) => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/token/", {
+      const data = await apiFetch("/user/login/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
 
-      if (!res.ok) throw new Error(data.detail || "Usuario o contraseña incorrectos");
+      // Guardar tokens correctos del backend
+      localStorage.setItem("access", data.access);
+      localStorage.setItem("refresh", data.refresh);
 
-      // Guardar tokens
-      localStorage.setItem("token", data.access);
-      localStorage.setItem("refreshToken", data.refresh);
       setToken(data.access);
+      setRefreshToken(data.refresh);
 
-      // Obtener datos de usuario
-      const profileRes = await fetch("http://127.0.0.1:8000/api/user/profile/", {
-        headers: { Authorization: `Bearer ${data.access}` },
-      });
-      if (!profileRes.ok) throw new Error("No se pudo obtener perfil");
-      const userData = await profileRes.json();
+      // Cargar perfil del usuario
+      const userData = await apiFetch("/user/profile/");
       setUser(userData);
 
-      // Mensaje de bienvenida
-      const nombre = userData.username || username;
-      setMensaje(`🎸 ¡Bienvenido/a, ${nombre}!`);
-
-      return userData; // <-- Importante: devuelve el usuario
-    } catch (err) {
-      console.error("Error de login:", err);
-      setMensaje("❌ No se pudo iniciar sesión. Verifica tus datos.");
-      throw err; // lanza el error para que Login.jsx lo capture
-    } finally {
-      setLoading(false);
+      return true;
+    } catch (error) {
+      throw new Error("Error al iniciar sesión");
     }
   };
 
+  // -----------------------------------------------------
+  // LOGOUT
+  // -----------------------------------------------------
   const logout = () => {
-    setUser(null);
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
     setToken(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
-    setMensaje("👋 Sesión cerrada correctamente.");
+    setRefreshToken(null);
+    setUser(null);
   };
+
+  // -----------------------------------------------------
+  // REGISTER (opcional)
+  // -----------------------------------------------------
+  const register = async (userData) => {
+    return await apiFetch("/user/register/", {
+      method: "POST",
+      body: JSON.stringify(userData),
+    });
+  };
+
+  // -----------------------------------------------------
+  // CARGAR PERFIL AL INICIAR
+  // -----------------------------------------------------
+  const fetchProfile = async () => {
+    const storedToken = localStorage.getItem("access");
+    if (!storedToken) return;
+
+    try {
+      const userData = await apiFetch("/user/profile/");
+      setUser(userData);
+    } catch (error) {
+      console.log("Token expirado o inválido, cerrando sesión");
+      logout();
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, login, logout, mensaje, setMensaje }}
+      value={{
+        user,
+        token,
+        refreshToken,
+        login,
+        logout,
+        register,
+        fetchProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+
 
 
 

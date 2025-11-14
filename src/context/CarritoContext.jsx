@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import { AuthContext } from "./AuthContext";
-import API from "../api/api";
+import { apiFetch } from "../api";
+
 
 export const CarritoContext = createContext();
 
@@ -71,7 +72,7 @@ export function CarritoProvider({ children }) {
       }));
 
       const response = await API.post(
-        "/orders/create/",
+        "/orders/",
         { ...shippingData, items: itemsBackend },
         { headers: { Authorization: `Bearer ${token}` } }
       );

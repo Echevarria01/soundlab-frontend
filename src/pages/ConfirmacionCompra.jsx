@@ -1,10 +1,20 @@
 // pages/ConfirmacionCompra.js
-import React from "react";
-import { useLocation, Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 
 export default function ConfirmacionCompra() {
   const location = useLocation();
-  const pedido = location.state?.pedido;
+  const [pedido, setPedido] = useState(location.state?.pedido || null);
+
+  // 🔹 Recuperar pedido desde localStorage si recarga la página
+  useEffect(() => {
+    if (!pedido) {
+      const pedidosGuardados = JSON.parse(localStorage.getItem("pedidos") || "[]");
+      if (pedidosGuardados.length > 0) {
+        setPedido(pedidosGuardados[pedidosGuardados.length - 1]);
+      }
+    }
+  }, [pedido]);
 
   if (!pedido) {
     return (
@@ -16,6 +26,20 @@ export default function ConfirmacionCompra() {
       </div>
     );
   }
+
+  const traducirEstado = (status) => {
+    switch (status) {
+      case "paid":
+        return "Pagado";
+      case "cancelled":
+        return "Cancelado";
+      case "rejected":
+        return "Rechazado";
+      case "pending":
+      default:
+        return "Pendiente";
+    }
+  };
 
   return (
     <div className="container mt-5">
@@ -33,18 +57,25 @@ export default function ConfirmacionCompra() {
         <ul className="list-group mb-3">
           {pedido.items.map((item) => (
             <li
-              key={item.id}
+              key={item.id || item.product}
               className="list-group-item d-flex justify-content-between align-items-center"
             >
-              {item.product_name} × {item.quantity}
+              {item.product_name || item.product} × {item.quantity}
               <span>${(item.price * item.quantity).toFixed(2)}</span>
             </li>
           ))}
         </ul>
 
         <h5 className="text-end">
-          <strong>Total: ${Number(pedido.total).toFixed(2)}</strong>
+          <strong>Total: ${Number(pedido.total || pedido.items.reduce(
+            (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
+            0
+          )).toFixed(2)}</strong>
         </h5>
+
+        <h6 className="mt-2">
+          Estado del pedido: <span className="badge bg-success">{traducirEstado(pedido.status)}</span>
+        </h6>
 
         <div className="text-center mt-4">
           <Link to="/" className="btn btn-dark">
@@ -55,3 +86,4 @@ export default function ConfirmacionCompra() {
     </div>
   );
 }
+

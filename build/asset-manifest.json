@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.515bfbbb.css",
-    "main.js": "/static/js/main.9c191683.js",
+    "main.js": "/static/js/main.8858c577.js",
     "static/media/banner4.jpg": "/static/media/banner4.40814e2667d1409a8158.jpg",
     "static/media/soundlab.png": "/static/media/soundlab.b84ea1fc05e4347e261d.png",
     "static/media/banner9.jpg": "/static/media/banner9.5bfa5dc1f798c40b6842.jpg",
@@ -15,10 +15,10 @@
     "static/media/banner6.jpg": "/static/media/banner6.563c93abd9416d5b4098.jpg",
     "index.html": "/index.html",
     "main.515bfbbb.css.map": "/static/css/main.515bfbbb.css.map",
-    "main.9c191683.js.map": "/static/js/main.9c191683.js.map"
+    "main.8858c577.js.map": "/static/js/main.8858c577.js.map"
   },
   "entrypoints": [
     "static/css/main.515bfbbb.css",
-    "static/js/main.9c191683.js"
+    "static/js/main.8858c577.js"
   ]
 }

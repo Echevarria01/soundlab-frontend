@@ -27,7 +27,7 @@ export default function Login() {
     try {
       const userData = await login(username, password);
 
-      // Guardar usuario en lista de usuarios guardados
+      // Guardar usuarios usados antes
       let updatedUsers = [...usuariosGuardados];
       if (!updatedUsers.includes(username)) {
         updatedUsers.push(username);
@@ -35,6 +35,7 @@ export default function Login() {
         setUsuariosGuardados(updatedUsers);
       }
 
+      // Cargar carrito si NO es admin
       if (!userData.is_staff) {
         const carritoLS = JSON.parse(localStorage.getItem("carrito")) || [];
         setCarrito(carritoLS);
@@ -45,7 +46,8 @@ export default function Login() {
 
       navigate("/");
     } catch (err) {
-      setError(err.message || "Error al iniciar sesión");
+      console.error(err);
+      setError("❌ Usuario o contraseña incorrectos");
     }
   };
 
@@ -66,7 +68,7 @@ export default function Login() {
               list="usuarios-guardados"
               required
             />
-            {/* Datalist para autocompletado */}
+
             <datalist id="usuarios-guardados">
               {usuariosGuardados.map((u, i) => (
                 <option key={i} value={u} />
@@ -103,6 +105,7 @@ export default function Login() {
     </div>
   );
 }
+
 
 
 

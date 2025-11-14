@@ -12,7 +12,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ConfirmacionCompra from "./pages/ConfirmacionCompra"; // ✅ NUEVO IMPORT
 import Footer from "./components/Footer";
-import API from "./api/api";
+import { apiFetch } from "./api";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./pages/Productos.css";
 

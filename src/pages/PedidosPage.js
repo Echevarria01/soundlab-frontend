@@ -1,5 +1,6 @@
+// pages/PedidosPage.js
 import React, { useEffect, useState, useContext } from "react";
-import API from "../api/api";
+import { apiFetch } from "../api";
 import { AuthContext } from "../context/AuthContext";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
@@ -16,8 +17,10 @@ export default function PedidosPage() {
 
     const fetchPedidos = async () => {
       try {
-        const response = await API.get("/orders/");
-        setPedidos(response.data);
+        const data = await apiFetch("/orders/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setPedidos(data);
       } catch (err) {
         console.error("Error al obtener pedidos:", err);
         setError("No se pudieron cargar los pedidos.");
@@ -45,12 +48,14 @@ export default function PedidosPage() {
     if (!isConfirmed) return;
 
     try {
-      await API.patch(`/orders/${id}/update_status/`, { status: nuevoEstado });
+      await apiFetch(`/orders/${id}/update_status/`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: nuevoEstado }),
+      });
 
       setPedidos((prev) =>
-        prev.map((p) =>
-          p.id === id ? { ...p, status: nuevoEstado } : p
-        )
+        prev.map((p) => (p.id === id ? { ...p, status: nuevoEstado } : p))
       );
 
       Swal.fire({
@@ -142,7 +147,8 @@ export default function PedidosPage() {
                       ?.reduce(
                         (total, item) =>
                           total +
-                          (Number(item.price) || 0) * (Number(item.quantity) || 1),
+                          (Number(item.price) || 0) *
+                            (Number(item.quantity) || 1),
                         0
                       )
                       .toFixed(2)}
@@ -163,7 +169,9 @@ export default function PedidosPage() {
                       </button>
                       <button
                         className="btn btn-sm btn-danger"
-                        onClick={() => actualizarEstado(pedido.id, "cancelled")}
+                        onClick={() =>
+                          actualizarEstado(pedido.id, "cancelled")
+                        }
                       >
                         ❌ Cancelar
                       </button>
@@ -234,7 +242,8 @@ export default function PedidosPage() {
                         ?.reduce(
                           (sum, item) =>
                             sum +
-                            (Number(item.price) || 0) * (Number(item.quantity) || 1),
+                            (Number(item.price) || 0) *
+                              (Number(item.quantity) || 1),
                           0
                         )
                         .toFixed(2)}

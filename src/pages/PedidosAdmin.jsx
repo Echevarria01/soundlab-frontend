@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import API from "../api/api";
+import { apiFetch } from "../api";
 import { Badge } from "react-bootstrap";
 
 export default function PedidosAdmin() {
