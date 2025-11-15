@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
     const fetchProfile = async () => {
       if (!token) return;
       try {
-        const data = await apiFetch("/user/profile/", {
+        const data = await apiFetch("/api/user/profile/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(data);
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       // pedir token JWT
-      const data = await apiFetch("/token/", {
+      const data = await apiFetch("/api/token/", {
         method: "POST",
         body: JSON.stringify({ username, password }),
       });
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
       setToken(data.access);
 
       // pedir datos del usuario
-      const userData = await apiFetch("/user/profile/", {
+      const userData = await apiFetch("/api/user/profile/", {
         headers: { Authorization: `Bearer ${data.access}` },
       });
 
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (username, email, password) => {
     setLoading(true);
     try {
-      const data = await apiFetch("/user/register/", {
+      const data = await apiFetch("/api/user/register/", {
         method: "POST",
         body: JSON.stringify({ username, email, password }),
       });
@@ -90,6 +90,7 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
 
 
 
