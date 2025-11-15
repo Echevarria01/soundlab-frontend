@@ -1,4 +1,3 @@
-// api.js
 const API_URL =
   process.env.REACT_APP_API_URL || "https://soundlab-store.up.railway.app/api";
 
@@ -9,7 +8,7 @@ export async function apiFetch(endpoint, options = {}) {
 
   const isJSON = !(options.body instanceof FormData);
 
-  // 👉 TOKEN CORRECTO (debe leer "token")
+  // 👉 TOKEN CORRECTO
   const token = localStorage.getItem("token");
 
   const headers = {
@@ -17,6 +16,9 @@ export async function apiFetch(endpoint, options = {}) {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
+
+  console.log("URL llamada:", url);
+  console.log("Headers enviados:", headers);
 
   const res = await fetch(url, {
     ...options,
@@ -30,6 +32,7 @@ export async function apiFetch(endpoint, options = {}) {
 
   return res.json();
 }
+
 
 
 
