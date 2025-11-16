@@ -57,24 +57,30 @@ export default function ConfirmacionCompra() {
         <ul className="list-group mb-3">
           {pedido.items.map((item) => (
             <li
-              key={item.id || item.product}
+              key={item.id || item.product?.id}
               className="list-group-item d-flex justify-content-between align-items-center"
             >
-              {item.product_name || item.product} × {item.quantity}
+              {item.product?.name} × {item.quantity}
               <span>${(item.price * item.quantity).toFixed(2)}</span>
             </li>
           ))}
         </ul>
 
         <h5 className="text-end">
-          <strong>Total: ${Number(pedido.total || pedido.items.reduce(
-            (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
-            0
-          )).toFixed(2)}</strong>
+          <strong>Total: ${
+            Number(
+              pedido.total ||
+              pedido.items.reduce(
+                (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
+                0
+              )
+            ).toFixed(2)
+          }</strong>
         </h5>
 
         <h6 className="mt-2">
-          Estado del pedido: <span className="badge bg-success">{traducirEstado(pedido.status)}</span>
+          Estado del pedido:{" "}
+          <span className="badge bg-success">{traducirEstado(pedido.status)}</span>
         </h6>
 
         <div className="text-center mt-4">

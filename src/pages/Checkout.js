@@ -50,22 +50,26 @@ export default function Checkout() {
     try {
       // Formatear items como tu backend los espera
       const items = carrito.map((item) => ({
-        product: item.id,
-        quantity: item.cantidad,
-      }));
+  product: item.id,
+  quantity: item.cantidad,
+  price: item.precio,
+}));
+
 
       // 🚀 Llamada correcta SIN HEADERS (apiFetch los agrega)
       const nuevoPedido = await apiFetch("/orders/", {
-        method: "POST",
-        body: JSON.stringify({
-          shipping_name,
-          shipping_address,
-          shipping_city,
-          shipping_phone,
-          payment_method,
-          items,
-        }),
-      });
+  method: "POST",
+  body: JSON.stringify({
+    shipping_name,
+    shipping_address,
+    shipping_city,
+    shipping_phone,
+    payment_method,
+    invoice_type: "A",   // ✅ O "B" si querés
+    items,
+  }),
+});
+
 
       // Actualiza historial de pedidos
       setHistorialPedidos((prev) => [...prev, nuevoPedido]);

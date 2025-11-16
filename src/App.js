@@ -37,14 +37,14 @@ function ProductosLoader() {
   useEffect(() => {
     const fetchProductos = async () => {
       try {
-        const response = await API.get("/products/");
+        const data = await apiFetch("/products/");
         setProductos(
-          response.data.map((item) => ({
+          data.map((item) => ({
             id: item.id,
-            nombre: item.name || item.nombre,
-            precio: parseFloat(item.price || item.precio),
-            categoria: item.category?.name || item.categoria,
-            imagen: item.image || item.imagen,
+            nombre: item.name,
+            precio: parseFloat(item.price),
+            categoria: item.category?.name,
+            imagen: item.image,
           }))
         );
       } catch (error) {
@@ -56,6 +56,7 @@ function ProductosLoader() {
 
   return <Productos productos={productos} />;
 }
+
 
 // -------------------- APP PRINCIPAL --------------------
 function App() {
