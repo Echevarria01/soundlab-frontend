@@ -10,21 +10,7 @@ const container = document.getElementById("root");
 const root = createRoot(container);
 root.render(<App />);
 
-if (process.env.NODE_ENV === "development") {
-  worker.start().then(() => {
-    root.render(
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
-    );
-  });
-} else {
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-}
+
 
 
 

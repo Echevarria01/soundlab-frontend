@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
     const fetchProfile = async () => {
       if (!token) return;
       try {
-        const data = await apiFetch("/api/user/profile/", {
+        const data = await apiFetch("user/profile/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(data);
@@ -28,8 +28,8 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     setLoading(true);
     try {
-      // pedir token JWT
-      const data = await apiFetch("/api/token/", {
+      // 1️⃣ Obtener tokens
+      const data = await apiFetch("token/", {
         method: "POST",
         body: JSON.stringify({ username, password }),
       });
@@ -38,13 +38,14 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("refreshToken", data.refresh);
       setToken(data.access);
 
-      // pedir datos del usuario
-      const userData = await apiFetch("/api/user/profile/", {
+      // 2️⃣ Obtener perfil del usuario
+      const userData = await apiFetch("user/profile/", {
         headers: { Authorization: `Bearer ${data.access}` },
       });
 
       setUser(userData);
       setMensaje(`🎸 ¡Bienvenido/a, ${userData.username || username}!`);
+
       return userData;
     } catch (err) {
       console.error("Error de login:", err);
@@ -58,7 +59,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (username, email, password) => {
     setLoading(true);
     try {
-      const data = await apiFetch("/api/user/register/", {
+      const data = await apiFetch("user/register/", {
         method: "POST",
         body: JSON.stringify({ username, email, password }),
       });
@@ -84,7 +85,16 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, login, register, logout, mensaje, setMensaje }}
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        register,
+        logout,
+        mensaje,
+        setMensaje,
+      }}
     >
       {children}
     </AuthContext.Provider>

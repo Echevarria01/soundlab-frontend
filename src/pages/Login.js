@@ -35,18 +35,18 @@ export default function Login() {
         setUsuariosGuardados(updatedUsers);
       }
 
-      // Cargar carrito si NO es admin
-      if (!userData.is_staff) {
-        const carritoLS = JSON.parse(localStorage.getItem("carrito")) || [];
-        setCarrito(carritoLS);
-      } else {
+      // ADMIN no tiene carrito -> borrar
+      if (userData.is_staff) {
         setCarrito([]);
         localStorage.removeItem("carrito");
+      } else {
+        const carritoLS = JSON.parse(localStorage.getItem("carrito")) || [];
+        setCarrito(carritoLS);
       }
 
       navigate("/");
     } catch (err) {
-      console.error(err);
+      console.error("Error al iniciar sesión:", err);
       setError("❌ Usuario o contraseña incorrectos");
     }
   };

@@ -8,7 +8,6 @@ export async function apiFetch(endpoint, options = {}) {
 
   const isJSON = !(options.body instanceof FormData);
 
-  // 👉 TOKEN CORRECTO
   const token = localStorage.getItem("token");
 
   const headers = {
@@ -32,7 +31,6 @@ export async function apiFetch(endpoint, options = {}) {
 
   return res.json();
 }
-
 
 
 
