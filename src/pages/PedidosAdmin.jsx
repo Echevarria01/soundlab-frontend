@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useContext } from "react";
 import { apiFetch } from "../api";
-import { Badge } from "react-bootstrap";
+import { Badge, Modal, Button } from "react-bootstrap";  // Importar Modal y Button
 import { AuthContext } from "../context/AuthContext";
 
 export default function PedidosAdmin() {
   const { token } = useContext(AuthContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);  // Estado para el modal
+  const [selectedOrder, setSelectedOrder] = useState(null);  // Estado para el pedido seleccionado
 
-  // ============================
   // Cargar pedidos
-  // ============================
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -29,15 +29,17 @@ export default function PedidosAdmin() {
     fetchOrders();
   }, [token]);
 
-  // ============================
-  // Cambiar estado
-  // ============================
+  // Cambiar estado del pedido (solo admin)
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await apiFetch(`/orders/${orderId}/update_status/`, {
         method: "PATCH",
         token,
-        body: { status: newStatus },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus }),
       });
 
       setOrders((prev) =>
@@ -47,6 +49,22 @@ export default function PedidosAdmin() {
       );
     } catch (error) {
       console.error("Error al actualizar estado:", error);
+
+      // Si la API retorna detalles adicionales, mostrarlo aquí.
+      if (error.response) {
+        console.error("Response error:", error.response.data);
+        Swal.fire({
+          title: "Error ❌",
+          text: `No se pudo actualizar el estado del pedido. ${error.response.data}`,
+          icon: "error",
+        });
+      } else {
+        Swal.fire({
+          title: "Error ❌",
+          text: "No se pudo actualizar el estado del pedido.",
+          icon: "error",
+        });
+      }
     }
   };
 
@@ -87,11 +105,12 @@ export default function PedidosAdmin() {
                     <td>{order.shipping_name}</td>
 
                     <td>
-                      {order.items.map((item) => (
-                        <div key={item.id}>
-                          {item.product_name} × {item.quantity} — ${item.price}
-                        </div>
-                      ))}
+                      <button
+                        className="btn btn-sm btn-info"
+                        onClick={() => handleOpenModal(order)} // Abre el modal al hacer clic
+                      >
+                        Ver productos
+                      </button>
                     </td>
 
                     <td>${total.toLocaleString()}</td>
@@ -141,3 +160,4 @@ export default function PedidosAdmin() {
     </div>
   );
 }
+

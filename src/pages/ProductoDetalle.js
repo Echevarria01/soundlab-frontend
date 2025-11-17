@@ -1,6 +1,8 @@
 import { useState, useEffect, useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { CarritoContext } from "../context/CarritoContext";
+import { CarritoContext } from "../context/CarritoContext"; // Asegúrate de importar el contexto
+import { ToastContainer, toast } from "react-toastify"; // Para notificaciones
+import "react-toastify/dist/ReactToastify.css"; // Asegúrate de tener instalado react-toastify
 
 export default function ProductoDetalle() {
   const { id } = useParams();
@@ -21,12 +23,11 @@ export default function ProductoDetalle() {
 
         // Usamos nombres limpios de imágenes
         const productoConImagen = {
-  ...data,
-  image: data.image
-    ? `${window.location.origin}/img/productos/${data.image}`
-    : "https://via.placeholder.com/400x400?text=Sin+imagen",
-};
-
+          ...data,
+          image: data.image
+            ? `${window.location.origin}/img/productos/${data.image}`
+            : "https://via.placeholder.com/400x400?text=Sin+imagen",
+        };
 
         setProducto(productoConImagen);
       } catch (err) {
@@ -39,6 +40,12 @@ export default function ProductoDetalle() {
 
     fetchProducto();
   }, [id]);
+
+  const handleAgregarCarrito = () => {
+    agregarAlCarrito(producto);
+    toast.success("Producto agregado al carrito!"); // Confirmación visual
+    navigate("/carrito");
+  };
 
   if (cargando)
     return (
@@ -72,30 +79,53 @@ export default function ProductoDetalle() {
     <div className="container mt-5">
       <nav aria-label="breadcrumb" className="mb-4">
         <ol className="breadcrumb">
-          <li className="breadcrumb-item"><Link to="/">Inicio</Link></li>
-          <li className="breadcrumb-item"><Link to="/productos">{producto.category?.name || "Categoría"}</Link></li>
-          <li className="breadcrumb-item active" aria-current="page">{producto.name}</li>
+          <li className="breadcrumb-item">
+            <Link to="/">Inicio</Link>
+          </li>
+          <li className="breadcrumb-item">
+            <Link to="/productos">{producto.category?.name || "Categoría"}</Link>
+          </li>
+          <li className="breadcrumb-item active" aria-current="page">
+            {producto.name}
+          </li>
         </ol>
       </nav>
 
       <div className="row">
         <div className="col-md-6">
-          <img src={producto.image} alt={producto.name} className="img-fluid rounded shadow-sm" />
+          <img
+            src={producto.image}
+            alt={producto.name}
+            className="img-fluid rounded shadow-sm"
+          />
         </div>
         <div className="col-md-6">
           <h1 className="mb-3">{producto.name}</h1>
           <span className="badge bg-info mb-3">{producto.category?.name || "Sin categoría"}</span>
           <p className="text-muted">{producto.description || "Sin descripción"}</p>
-          <h3 className="text-success fw-bold mb-4">${parseFloat(producto.price).toLocaleString("es-AR")}</h3>
+          <h3 className="text-success fw-bold mb-4">
+            ${parseFloat(producto.price).toLocaleString("es-AR")}
+          </h3>
           <div className="mt-4">
-            <button className="btn btn-primary btn-lg me-3" onClick={() => { agregarAlCarrito(producto); navigate("/carrito"); }}>🛒 Agregar al carrito</button>
-            <Link to="/productos" className="btn btn-outline-secondary btn-lg">Volver a productos</Link>
+            <button
+              className="btn btn-primary btn-lg me-3"
+              onClick={handleAgregarCarrito}
+            >
+              🛒 Agregar al carrito
+            </button>
+            <Link to="/productos" className="btn btn-outline-secondary btn-lg">
+              Volver a productos
+            </Link>
           </div>
         </div>
       </div>
+
+      {/* Notificación */}
+      <ToastContainer position="top-right" autoClose={5000} hideProgressBar newestOnTop />
     </div>
   );
 }
+
 
 
 

@@ -1,9 +1,9 @@
-// pages/ConfirmacionCompra.js
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export default function ConfirmacionCompra() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [pedido, setPedido] = useState(location.state?.pedido || null);
 
   // 🔹 Recuperar pedido desde localStorage si recarga la página
@@ -12,10 +12,13 @@ export default function ConfirmacionCompra() {
       const pedidosGuardados = JSON.parse(localStorage.getItem("pedidos") || "[]");
       if (pedidosGuardados.length > 0) {
         setPedido(pedidosGuardados[pedidosGuardados.length - 1]);
+      } else {
+        navigate("/"); // Redirigir si no hay pedido
       }
     }
-  }, [pedido]);
+  }, [pedido, navigate]);
 
+  // Verificar si el pedido es nulo o está vacío
   if (!pedido) {
     return (
       <div className="container text-center mt-5">
@@ -27,6 +30,7 @@ export default function ConfirmacionCompra() {
     );
   }
 
+  // Traducir estado del pedido
   const traducirEstado = (status) => {
     switch (status) {
       case "paid":
@@ -40,6 +44,18 @@ export default function ConfirmacionCompra() {
         return "Pendiente";
     }
   };
+
+  // Asegurarse de que el pedido tiene productos y que `items` es un array
+  if (!Array.isArray(pedido.items) || pedido.items.length === 0) {
+    return (
+      <div className="container text-center mt-5">
+        <h3>Error: No hay productos en el pedido.</h3>
+        <Link to="/" className="btn btn-dark mt-3">
+          Volver a la tienda
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-5">
@@ -55,12 +71,12 @@ export default function ConfirmacionCompra() {
 
         <h4 className="mt-4">🧾 Detalle del pedido</h4>
         <ul className="list-group mb-3">
-          {pedido.items.map((item) => (
+          {pedido.items.map((item, index) => (
             <li
-              key={item.id || item.product?.id}
+              key={index} // Usar índice como clave
               className="list-group-item d-flex justify-content-between align-items-center"
             >
-              {item.product?.name} × {item.quantity}
+              {item.product_name || item.product?.name} × {item.quantity}
               <span>${(item.price * item.quantity).toFixed(2)}</span>
             </li>
           ))}
@@ -92,4 +108,5 @@ export default function ConfirmacionCompra() {
     </div>
   );
 }
+
 

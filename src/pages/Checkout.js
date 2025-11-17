@@ -23,12 +23,12 @@ export default function Checkout() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState(""); // <-- NUEVO
 
   const handleChange = (e) => {
     setShippingData({ ...shippingData, [e.target.name]: e.target.value });
   };
 
-  // El total ahora usa price y quantity
   const total = carrito.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
@@ -37,6 +37,7 @@ export default function Checkout() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccessMessage(""); // <-- LIMPIA MENSAJE PREVIO
 
     if (carrito.length === 0) return setError("El carrito está vacío.");
 
@@ -48,12 +49,10 @@ export default function Checkout() {
       payment_method,
     } = shippingData;
 
-    // Validaciones
     if (!shipping_name || !shipping_address || !shipping_city || !shipping_phone) {
       return setError("Debes completar todos los datos de envío.");
     }
 
-    // Validación de tarjeta
     if (payment_method === "credit_card" || payment_method === "debit_card") {
       if (
         !shippingData.card_number ||
@@ -65,13 +64,19 @@ export default function Checkout() {
       }
     }
 
-    // --- LLAMAMOS AL CONTEXT PARA CREAR EL PEDIDO ---
     try {
       setLoading(true);
       const pedidoConfirmado = await registrarPedido(shippingData);
 
-      if (pedidoConfirmado) {
-        navigate("/confirmacion-compra", { state: { pedido: pedidoConfirmado } });
+      if (pedidoConfirmado.ok) {
+        // Mostramos un alert verde de confirmación
+        setSuccessMessage(pedidoConfirmado.message || "✅ Pedido realizado con éxito!");
+        // Redirigimos después de 2s
+        setTimeout(() => {
+          navigate("/confirmacion-compra", { state: { pedido: pedidoConfirmado.pedido } });
+        }, 2000);
+      } else {
+        setError(pedidoConfirmado.message || "❌ Error al confirmar el pedido.");
       }
 
     } catch (err) {
@@ -99,8 +104,12 @@ export default function Checkout() {
       <h2>🧾 Finalizar compra</h2>
 
       <div className="row">
-        {/* ----------------------------- FORMULARIO ----------------------------- */}
         <div className="col-md-6">
+          {/* ------------------ ALERTA DE ÉXITO ------------------ */}
+          {successMessage && (
+            <div className="alert alert-success">{successMessage}</div>
+          )}
+
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
               <label className="form-label">Nombre completo</label>
@@ -161,7 +170,6 @@ export default function Checkout() {
               </select>
             </div>
 
-            {/* ----------------------- CAMPOS TARJETA ------------------------ */}
             {isCard && (
               <div className="border p-3 rounded mb-3 bg-light">
                 <h5>Datos de la tarjeta</h5>
@@ -212,7 +220,6 @@ export default function Checkout() {
           </form>
         </div>
 
-        {/* ------------------------ RESUMEN DEL CARRITO ------------------------ */}
         <div className="col-md-6">
           <h4>🛍️ Resumen del carrito</h4>
 

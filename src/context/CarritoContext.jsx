@@ -48,28 +48,28 @@ export function CarritoProvider({ children }) {
   // --------------------------------------
   // AGREGAR AL CARRITO — VERSION CORREGIDA
   // --------------------------------------
-  const agregarAlCarrito = (producto) => {
-    // Normalizo SIEMPRE la estructura para evitar problemas
-    const item = {
-      id: producto.id,
-      name: producto.name || producto.nombre,
-      price: producto.price || producto.precio,
-      image: producto.image || producto.imagen,
-      quantity: 1,
-    };
-
-    setCarrito((prev) => {
-      const existente = prev.find((p) => p.id === item.id);
-
-      if (existente) {
-        return prev.map((p) =>
-          p.id === item.id ? { ...p, quantity: p.quantity + 1 } : p
-        );
-      }
-
-      return [...prev, item];
-    });
+const agregarAlCarrito = (producto) => {
+  const item = {
+    id: producto.id,
+    name: producto.name || producto.nombre,
+    price: producto.price || producto.precio,
+    image: producto.image || producto.imagen,
+    quantity: 1,
   };
+
+  setCarrito((prev) => {
+    const existente = prev.find((p) => p.id === item.id);
+
+    if (existente) {
+      return prev.map((p) =>
+        p.id === item.id ? { ...p, quantity: p.quantity + 1 } : p
+      );
+    }
+
+    return [...prev, item];
+  });
+};
+
 
   // Eliminar del carrito
   const eliminarDelCarrito = (idProducto) => {
@@ -82,59 +82,53 @@ export function CarritoProvider({ children }) {
   // --------------------------------------
   // REGISTRAR PEDIDO — VERSION CORREGIDA
   // --------------------------------------
-  const registrarPedido = async (shippingData) => {
-    if (carrito.length === 0) {
-      alert("⚠️ El carrito está vacío.");
-      return;
-    }
+const registrarPedido = async (shippingData) => {
+  if (carrito.length === 0) {
+    return { ok: false, message: "⚠️ El carrito está vacío." };
+  }
 
-    // Usuario sin sesión → guardar localmente
-    if (!user || !token) {
-      const nuevoPedido = {
-        id: Date.now(),
-        items: carrito,
-        fecha: new Date().toLocaleString(),
-        total: carrito.reduce(
-          (acc, item) => acc + item.price * item.quantity,
-          0
-        ),
-        origen: "local",
-        shipping: shippingData || {},
-      };
+  // Sin sesión → pedido local
+  if (!user || !token) {
+    const nuevoPedido = {
+      id: Date.now(),
+      items: carrito,
+      fecha: new Date().toLocaleString(),
+      total: carrito.reduce((acc, item) => acc + item.price * item.quantity, 0),
+      origen: "local",
+      shipping: shippingData || {},
+    };
 
-      setHistorialPedidos((prev) => [...prev, nuevoPedido]);
-      limpiarCarrito();
-      alert("🛍️ Pedido guardado localmente.");
-      return;
-    }
+    setHistorialPedidos((prev) => [...prev, nuevoPedido]);
+    limpiarCarrito();
+    return { ok: true, pedido: nuevoPedido, message: "Pedido guardado localmente." };
+  }
 
-    // Usuario con sesión → enviar al backend
-    try {
-      const itemsBackend = carrito.map((item) => ({
-        product: item.id,
-        quantity: item.quantity,
-        price: item.price,
-      }));
+  // Con sesión → enviar al backend
+  try {
+    const itemsBackend = carrito.map((item) => ({
+      product: item.id,
+      product_name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+    }));
 
-      const response = await apiFetch("/orders/", {
-        method: "POST",
-        body: JSON.stringify({
-          ...shippingData,
-          items: itemsBackend,
-        }),
-      });
+    const response = await apiFetch("/orders/", {
+      method: "POST",
+      body: JSON.stringify({ ...shippingData, items: itemsBackend }),
+      token,
+    });
 
-      const nuevoPedido = { ...response, origen: "backend" };
+    const nuevoPedido = { ...response, origen: "backend" };
+    setHistorialPedidos((prev) => [...prev, nuevoPedido]);
+    limpiarCarrito();
 
-      setHistorialPedidos((prev) => [...prev, nuevoPedido]);
-      limpiarCarrito();
+    return { ok: true, pedido: nuevoPedido, message: "Pedido realizado con éxito." };
+  } catch (err) {
+    console.error(err);
+    return { ok: false, message: "❌ Error enviando el pedido." };
+  }
+};
 
-      alert("🎉 ¡Pedido realizado con éxito!");
-    } catch (err) {
-      console.error(err);
-      alert("❌ Error enviando el pedido.");
-    }
-  };
 
   return (
     <CarritoContext.Provider

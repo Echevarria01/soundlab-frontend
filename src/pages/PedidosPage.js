@@ -10,7 +10,7 @@ export default function PedidosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 🔹 Obtener pedidos al cargar
+  // Obtener pedidos al cargar
   useEffect(() => {
     if (!token) return;
 
@@ -32,11 +32,11 @@ export default function PedidosPage() {
     fetchPedidos();
   }, [token]);
 
-  // 🔹 Cambiar estado (solo admin)
+  // Cambiar estado del pedido (solo admin)
   const actualizarEstado = async (id, nuevoEstado) => {
     const { isConfirmed } = await Swal.fire({
       title: `¿Actualizar pedido #${id}?`,
-      text: `¿Seguro que querés marcar este pedido como '${nuevoEstado}'?`,
+      text: `¿Seguro que quieres marcar este pedido como '${nuevoEstado}'?`,
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "Sí, actualizar",
@@ -75,7 +75,7 @@ export default function PedidosPage() {
     }
   };
 
-  // 🔹 Traducción de estados
+  // Traducción de estados
   const traducirEstado = (status) => {
     switch (status) {
       case "paid":
@@ -95,7 +95,7 @@ export default function PedidosPage() {
   if (!pedidos.length)
     return <p className="text-center mt-5">No hay pedidos registrados.</p>;
 
-  // 🔹 Admin ve todos — usuarios solo los suyos
+  // Admin ve todos los pedidos, usuarios solo los suyos
   const pedidosVisibles = user?.is_staff
     ? pedidos
     : pedidos.filter((p) => p.user === user?.id);
@@ -106,7 +106,7 @@ export default function PedidosPage() {
         {user?.is_staff ? "📋 Panel de Pedidos (Admin)" : "📦 Mis Pedidos"}
       </h2>
 
-      {/* =================== PANEL ADMIN =================== */}
+      {/* Tabla de pedidos */}
       {user?.is_staff ? (
         <div className="table-responsive">
           <table className="table table-dark table-striped align-middle">
@@ -117,6 +117,7 @@ export default function PedidosPage() {
                 <th>Método de pago</th>
                 <th>Estado</th>
                 <th>Total</th>
+                <th>Productos</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -154,6 +155,28 @@ export default function PedidosPage() {
                       .toFixed(2)}
                   </td>
                   <td>
+                    <button
+                      className="btn btn-sm btn-info"
+                      data-bs-toggle="collapse"
+                      data-bs-target={`#productos_${pedido.id}`}
+                    >
+                      Ver productos
+                    </button>
+                    <div
+                      className="collapse mt-2"
+                      id={`productos_${pedido.id}`}
+                    >
+                      <ul className="list-group">
+                        {pedido.items.map((item, index) => (
+                          <li key={index} className="list-group-item">
+                            {item.product_name} × {item.quantity} - $
+                            {(item.price * item.quantity).toFixed(2)}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </td>
+                  <td>
                     <div className="d-flex gap-2">
                       <button
                         className="btn btn-sm btn-success"
@@ -183,7 +206,7 @@ export default function PedidosPage() {
           </table>
         </div>
       ) : (
-        /* =================== VISTA USUARIO =================== */
+        // Vista de usuario: pedidos individuales
         pedidosVisibles.map((pedido) => (
           <div key={pedido.id} className="card mb-3 shadow-sm border-0">
             <div className="card-body bg-light">
