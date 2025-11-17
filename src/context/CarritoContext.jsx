@@ -10,7 +10,7 @@ export function CarritoProvider({ children }) {
   const [carrito, setCarrito] = useState([]);
   const [historialPedidos, setHistorialPedidos] = useState([]);
 
-  // Cargar carrito y pedidos desde LocalStorage
+  // Cargar datos desde LocalStorage al iniciar
   useEffect(() => {
     const carritoLS = localStorage.getItem("carrito");
     if (carritoLS) setCarrito(JSON.parse(carritoLS));
@@ -19,89 +19,109 @@ export function CarritoProvider({ children }) {
     if (pedidosLS) setHistorialPedidos(JSON.parse(pedidosLS));
   }, []);
 
-  // Guardar carrito en LocalStorage
+  // Guardar carrito automáticamente
   useEffect(() => {
     localStorage.setItem("carrito", JSON.stringify(carrito));
   }, [carrito]);
 
-  // Guardar pedidos en LocalStorage
+  // Guardar pedidos automáticamente
   useEffect(() => {
     localStorage.setItem("pedidos", JSON.stringify(historialPedidos));
   }, [historialPedidos]);
 
-
-  // 🟦 OBTENER PEDIDOS REALES DEL BACKEND CUANDO EL USUARIO INICIA SESIÓN
+  // Cargar pedidos del backend si hay usuario logueado
   useEffect(() => {
     async function cargarPedidosBackend() {
       if (!user || !token) return;
 
       try {
         const pedidosBackend = await apiFetch("/orders/");
-        console.log("Pedidos recibidos desde el backend:", pedidosBackend);
-
         setHistorialPedidos(pedidosBackend);
         localStorage.setItem("pedidos", JSON.stringify(pedidosBackend));
-
       } catch (error) {
         console.error("Error cargando pedidos:", error);
       }
     }
-
     cargarPedidosBackend();
   }, [user, token]);
 
-
+  // --------------------------------------
+  // AGREGAR AL CARRITO — VERSION CORREGIDA
+  // --------------------------------------
   const agregarAlCarrito = (producto) => {
+    // Normalizo SIEMPRE la estructura para evitar problemas
+    const item = {
+      id: producto.id,
+      name: producto.name || producto.nombre,
+      price: producto.price || producto.precio,
+      image: producto.image || producto.imagen,
+      quantity: 1,
+    };
+
     setCarrito((prev) => {
-      const existente = prev.find((item) => item.id === producto.id);
+      const existente = prev.find((p) => p.id === item.id);
+
       if (existente) {
-        return prev.map((item) =>
-          item.id === producto.id ? { ...item, cantidad: item.cantidad + 1 } : item
+        return prev.map((p) =>
+          p.id === item.id ? { ...p, quantity: p.quantity + 1 } : p
         );
-      } else {
-        return [...prev, { ...producto, cantidad: 1 }];
       }
+
+      return [...prev, item];
     });
   };
 
+  // Eliminar del carrito
   const eliminarDelCarrito = (idProducto) => {
     setCarrito((prev) => prev.filter((item) => item.id !== idProducto));
   };
 
+  // Limpiar todo el carrito
   const limpiarCarrito = () => setCarrito([]);
 
-
-  // Registrar pedido (local o backend)
+  // --------------------------------------
+  // REGISTRAR PEDIDO — VERSION CORREGIDA
+  // --------------------------------------
   const registrarPedido = async (shippingData) => {
-    if (carrito.length === 0) return alert("⚠️ El carrito está vacío.");
+    if (carrito.length === 0) {
+      alert("⚠️ El carrito está vacío.");
+      return;
+    }
 
-    // Usuario NO logueado → guardar local
+    // Usuario sin sesión → guardar localmente
     if (!user || !token) {
       const nuevoPedido = {
         id: Date.now(),
         items: carrito,
         fecha: new Date().toLocaleString(),
-        total: carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0),
+        total: carrito.reduce(
+          (acc, item) => acc + item.price * item.quantity,
+          0
+        ),
         origen: "local",
         shipping: shippingData || {},
       };
+
       setHistorialPedidos((prev) => [...prev, nuevoPedido]);
       limpiarCarrito();
-      return alert("🛍️ Pedido registrado localmente.");
+      alert("🛍️ Pedido guardado localmente.");
+      return;
     }
 
-    // Usuario logueado → enviar a backend
+    // Usuario con sesión → enviar al backend
     try {
       const itemsBackend = carrito.map((item) => ({
         product: item.id,
-        product_name: item.nombre,
-        quantity: item.cantidad,
-        price: item.precio,
+        quantity: item.quantity,
+        price: item.price,
       }));
 
       const response = await apiFetch("/orders/", {
         method: "POST",
-        body: JSON.stringify({ ...shippingData, items: itemsBackend }),
+        body: JSON.stringify({
+          ...shippingData,
+          items: itemsBackend,
+        }),
       });
 
       const nuevoPedido = { ...response, origen: "backend" };
@@ -109,11 +129,10 @@ export function CarritoProvider({ children }) {
       setHistorialPedidos((prev) => [...prev, nuevoPedido]);
       limpiarCarrito();
 
-      alert("🎉 ¡Pedido enviado correctamente!");
-
+      alert("🎉 ¡Pedido realizado con éxito!");
     } catch (err) {
       console.error(err);
-      alert("❌ No se pudo conectar con el servidor.");
+      alert("❌ Error enviando el pedido.");
     }
   };
 

@@ -21,11 +21,12 @@ export default function ProductoDetalle() {
 
         // Usamos nombres limpios de imágenes
         const productoConImagen = {
-          ...data,
-          image: data.image
-            ? `${window.location.origin}/img/productos/${data.image}`
-            : "https://via.placeholder.com/400x400?text=Sin+imagen",
-        };
+  ...data,
+  image: data.image
+    ? `${window.location.origin}/img/productos/${data.image}`
+    : "https://via.placeholder.com/400x400?text=Sin+imagen",
+};
+
 
         setProducto(productoConImagen);
       } catch (err) {
