@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
+  // Cargar perfil si hay token
   useEffect(() => {
     const fetchProfile = async () => {
       if (!token) return;
@@ -28,24 +29,25 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     setLoading(true);
     try {
-      // 1️⃣ Obtener tokens
+      // 1️⃣ Obtener tokens JWT
       const data = await apiFetch("token/", {
         method: "POST",
         body: JSON.stringify({ username, password }),
       });
 
+      if (!data.access) throw new Error("Credenciales inválidas");
+
       localStorage.setItem("token", data.access);
       localStorage.setItem("refreshToken", data.refresh);
       setToken(data.access);
 
-      // 2️⃣ Obtener perfil del usuario
+      // 2️⃣ Obtener perfil
       const userData = await apiFetch("user/profile/", {
         headers: { Authorization: `Bearer ${data.access}` },
       });
 
       setUser(userData);
       setMensaje(`🎸 ¡Bienvenido/a, ${userData.username || username}!`);
-
       return userData;
     } catch (err) {
       console.error("Error de login:", err);
@@ -68,7 +70,9 @@ export const AuthProvider = ({ children }) => {
       return data;
     } catch (err) {
       console.error("Error al registrar:", err);
-      setMensaje("❌ Error en el servidor.");
+      setMensaje(
+        err?.error || "❌ No se pudo conectar con el servidor o respuesta inválida."
+      );
       throw err;
     } finally {
       setLoading(false);
@@ -85,16 +89,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        token,
-        loading,
-        login,
-        register,
-        logout,
-        mensaje,
-        setMensaje,
-      }}
+      value={{ user, token, loading, login, register, logout, mensaje, setMensaje }}
     >
       {children}
     </AuthContext.Provider>

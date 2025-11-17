@@ -1,4 +1,3 @@
-// pages/PedidosPage.js
 import React, { useEffect, useState, useContext } from "react";
 import { apiFetch } from "../api";
 import { AuthContext } from "../context/AuthContext";
@@ -18,7 +17,8 @@ export default function PedidosPage() {
     const fetchPedidos = async () => {
       try {
         const data = await apiFetch("/orders/", {
-          headers: { Authorization: `Bearer ${token}` },
+          method: "GET",
+          token,
         });
         setPedidos(data);
       } catch (err) {
@@ -50,8 +50,8 @@ export default function PedidosPage() {
     try {
       await apiFetch(`/orders/${id}/update_status/`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status: nuevoEstado }),
+        token,
+        body: { status: nuevoEstado },
       });
 
       setPedidos((prev) =>
@@ -98,7 +98,7 @@ export default function PedidosPage() {
   // 🔹 Admin ve todos — usuarios solo los suyos
   const pedidosVisibles = user?.is_staff
     ? pedidos
-    : pedidos.filter((p) => p.user === user?.id && p.status === "paid"); // solo mostrar confirmados
+    : pedidos.filter((p) => p.user === user?.id);
 
   return (
     <div className="container mt-4">

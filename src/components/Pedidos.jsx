@@ -23,6 +23,7 @@ export default function Pedidos() {
             <h5 className="card-title">
               Pedido #{pedido.id} — Total: ${Number(pedido.total).toLocaleString()}
             </h5>
+
             <p className="card-text">
               <strong>Nombre:</strong> {pedido.shipping_name} <br />
               <strong>Dirección:</strong> {pedido.shipping_address}, {pedido.shipping_city} <br />
@@ -32,22 +33,48 @@ export default function Pedidos() {
             </p>
 
             {pedido.items && pedido.items.length > 0 && (
-              <div className="mt-3">
+              <div className="mt-4">
                 <h6>Productos:</h6>
                 <ul className="list-group">
-                  {pedido.items.map((item, index) => (
+
+                  {pedido.items.map((item) => (
                     <li
-                      key={index}
+                      key={item.id}
                       className="list-group-item d-flex justify-content-between align-items-center"
                     >
-                      <span>
-                        <strong>ID Producto:</strong> {item.product}
-                      </span>
-                      <span>
-                        {item.quantity} × ${Number(item.price).toLocaleString()}
-                      </span>
+                      <div className="d-flex align-items-center gap-3">
+
+                        <img
+                          src={item.product.image}
+                          alt={item.product.name}
+                          style={{
+                            width: "60px",
+                            height: "60px",
+                            objectFit: "cover",
+                            borderRadius: "5px",
+                          }}
+                        />
+
+                        <div>
+                          <strong>{item.product.name}</strong>
+                          <br />
+                          <small className="text-muted">
+                            Precio unitario: ${Number(item.product.price).toLocaleString()}
+                          </small>
+                        </div>
+                      </div>
+
+                      <div className="text-end">
+                        <strong>{item.quantity} unidades</strong>
+                        <br />
+                        <span className="text-muted">
+                          Subtotal: $
+                          {Number(item.quantity * item.product.price).toLocaleString()}
+                        </span>
+                      </div>
                     </li>
                   ))}
+
                 </ul>
               </div>
             )}

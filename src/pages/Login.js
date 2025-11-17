@@ -27,15 +27,15 @@ export default function Login() {
     try {
       const userData = await login(username, password);
 
-      // Guardar usuarios usados antes
-      let updatedUsers = [...usuariosGuardados];
+      // Guardar usuario en localStorage si no existía
+      const updatedUsers = [...usuariosGuardados];
       if (!updatedUsers.includes(username)) {
         updatedUsers.push(username);
         localStorage.setItem("usuarios", JSON.stringify(updatedUsers));
         setUsuariosGuardados(updatedUsers);
       }
 
-      // ADMIN no tiene carrito -> borrar
+      // Manejo del carrito según tipo de usuario
       if (userData.is_staff) {
         setCarrito([]);
         localStorage.removeItem("carrito");
@@ -44,7 +44,7 @@ export default function Login() {
         setCarrito(carritoLS);
       }
 
-      navigate("/");
+      navigate("/"); // Redirige a home
     } catch (err) {
       console.error("Error al iniciar sesión:", err);
       setError("❌ Usuario o contraseña incorrectos");
@@ -105,6 +105,7 @@ export default function Login() {
     </div>
   );
 }
+
 
 
 

@@ -10,9 +10,8 @@ export default function Register() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [serverError, setServerError] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const { login } = useContext(AuthContext);
+  const { register, login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -23,41 +22,22 @@ export default function Register() {
     e.preventDefault();
     setServerError("");
 
-    if (!isValidEmail(email)) {
-      setEmailError("El correo no tiene un formato válido.");
-      return;
-    } else setEmailError("");
+    if (!isValidEmail(email)) return setEmailError("El correo no tiene un formato válido.");
+    setEmailError("");
 
-    if (!isValidPassword(password)) {
-      setPasswordError(
+    if (!isValidPassword(password))
+      return setPasswordError(
         "Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número."
       );
-      return;
-    } else setPasswordError("");
-
-    setLoading(true);
+    setPasswordError("");
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/user/register/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, username, password, role: "user" }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        setServerError(data.error || "❌ Error en el registro.");
-        setLoading(false);
-        return;
-      }
-
+      await register(username, email, password);
+      // Auto login después de registrarse
       await login(username, password);
       navigate("/");
     } catch (err) {
-      console.error("Error al registrar:", err);
-      setServerError("❌ No se pudo conectar con el servidor.");
-    } finally {
-      setLoading(false);
+      setServerError(err?.error || "❌ No se pudo conectar con el servidor.");
     }
   };
 
@@ -65,7 +45,6 @@ export default function Register() {
     <div className="auth-container">
       <div className="card auth-card animate__animated animate__fadeInUp">
         <h2 className="text-center mb-4">🎶 Crear cuenta</h2>
-
         <form onSubmit={handleRegister}>
           <div className="mb-3">
             <label className="form-label">Correo electrónico</label>
@@ -102,15 +81,13 @@ export default function Register() {
               placeholder="Contraseña segura"
               required
             />
-            {passwordError && (
-              <div className="invalid-feedback">{passwordError}</div>
-            )}
+            {passwordError && <div className="invalid-feedback">{passwordError}</div>}
           </div>
 
           {serverError && <div className="alert alert-danger">{serverError}</div>}
 
-          <button type="submit" className="btn btn-dark w-100" disabled={loading}>
-            {loading ? "Registrando..." : "Registrarse"}
+          <button type="submit" className="btn btn-dark w-100">
+            Registrarse
           </button>
         </form>
 

@@ -1,16 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { apiFetch } from "../api";
 import { Badge } from "react-bootstrap";
+import { AuthContext } from "../context/AuthContext";
 
 export default function PedidosAdmin() {
+  const { token } = useContext(AuthContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ============================
+  // Cargar pedidos
+  // ============================
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await API.get("/orders/");
-        setOrders(response.data);
+        const data = await apiFetch("/orders/", {
+          method: "GET",
+          token,
+        });
+        setOrders(data);
       } catch (error) {
         console.error("Error al cargar pedidos:", error);
       } finally {
@@ -19,11 +27,19 @@ export default function PedidosAdmin() {
     };
 
     fetchOrders();
-  }, []);
+  }, [token]);
 
+  // ============================
+  // Cambiar estado
+  // ============================
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      await API.patch(`/orders/${orderId}/`, { status: newStatus });
+      await apiFetch(`/orders/${orderId}/update_status/`, {
+        method: "PATCH",
+        token,
+        body: { status: newStatus },
+      });
+
       setOrders((prev) =>
         prev.map((order) =>
           order.id === orderId ? { ...order, status: newStatus } : order
@@ -40,6 +56,7 @@ export default function PedidosAdmin() {
   return (
     <div className="container py-4 text-light">
       <h2 className="mb-4">Panel de Pedidos</h2>
+
       {orders.length === 0 ? (
         <p>No hay pedidos disponibles.</p>
       ) : (
@@ -60,39 +77,46 @@ export default function PedidosAdmin() {
             <tbody>
               {orders.map((order) => {
                 const total = order.items.reduce(
-                  (sum, item) => sum + item.price * item.quantity,
+                  (sum, item) => sum + Number(item.price) * Number(item.quantity),
                   0
                 );
+
                 return (
                   <tr key={order.id}>
                     <td>{order.id}</td>
                     <td>{order.shipping_name}</td>
+
                     <td>
                       {order.items.map((item) => (
                         <div key={item.id}>
-                          {item.product_name} × {item.quantity} — $
-                          {item.price}
+                          {item.product_name} × {item.quantity} — ${item.price}
                         </div>
                       ))}
                     </td>
+
                     <td>${total.toLocaleString()}</td>
                     <td>{order.payment_method}</td>
+
                     <td>
                       {order.shipping_address}, {order.shipping_city}
                     </td>
+
                     <td>
                       <Badge
                         bg={
-                          order.status === "completed"
+                          order.status === "paid"
                             ? "success"
                             : order.status === "pending"
                             ? "secondary"
-                            : "danger"
+                            : order.status === "cancelled"
+                            ? "danger"
+                            : "warning"
                         }
                       >
                         {order.status}
                       </Badge>
                     </td>
+
                     <td>
                       <select
                         value={order.status}
@@ -102,8 +126,9 @@ export default function PedidosAdmin() {
                         className="form-select form-select-sm bg-dark text-light border-secondary"
                       >
                         <option value="pending">Pendiente</option>
-                        <option value="completed">Completado</option>
+                        <option value="paid">Pagado</option>
                         <option value="cancelled">Cancelado</option>
+                        <option value="rejected">Rechazado</option>
                       </select>
                     </td>
                   </tr>
