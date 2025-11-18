@@ -87,7 +87,6 @@ const registrarPedido = async (shippingData) => {
     return { ok: false, message: "⚠️ El carrito está vacío." };
   }
 
-  // Sin sesión → pedido local
   if (!user || !token) {
     const nuevoPedido = {
       id: Date.now(),
@@ -103,7 +102,6 @@ const registrarPedido = async (shippingData) => {
     return { ok: true, pedido: nuevoPedido, message: "Pedido guardado localmente." };
   }
 
-  // Con sesión → enviar al backend
   try {
     const itemsBackend = carrito.map((item) => ({
       product: item.id,
@@ -115,7 +113,6 @@ const registrarPedido = async (shippingData) => {
     const response = await apiFetch("/orders/", {
       method: "POST",
       body: JSON.stringify({ ...shippingData, items: itemsBackend }),
-      token,
     });
 
     const nuevoPedido = { ...response, origen: "backend" };

@@ -3,93 +3,138 @@ import { apiFetch } from "../api";
 
 export const AuthContext = createContext();
 
+const API_BASE = "https://soundlab-store.up.railway.app";
+const API_LOGIN = "/token/";
+const API_REGISTER = "/user/register/";
+const API_PROFILE = "/user/profile/";
+const API_REFRESH = "/token/refresh/";
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token") || null);
+  const [token, setToken] = useState(localStorage.getItem("access_token") || null);
+  const [refreshToken, setRefreshToken] = useState(localStorage.getItem("refresh_token") || null);
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
   // Cargar perfil si hay token
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!token) return;
+    if (!token) return;
+
+    const cargarPerfil = async () => {
       try {
-        const data = await apiFetch("user/profile/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUser(data);
+        const perfil = await apiFetch(API_PROFILE, {}, token);
+        setUser(perfil);
       } catch (err) {
-        console.warn("Token inválido o expirado");
+        console.log("Token inválido. Cerrando sesión…");
         logout();
       }
     };
-    fetchProfile();
+
+    cargarPerfil();
   }, [token]);
 
+  // LOGIN
   const login = async (username, password) => {
     setLoading(true);
     try {
-      // 1️⃣ Obtener tokens JWT
-      const data = await apiFetch("token/", {
-        method: "POST",
-        body: JSON.stringify({ username, password }),
-      });
+      // Llamada login sin token vacío
+      const data = await apiFetch(
+        API_LOGIN,
+        {
+          method: "POST",
+          body: JSON.stringify({ username, password }),
+          skipAuth: true,
+        }
+      );
 
-      if (!data.access) throw new Error("Credenciales inválidas");
-
-      localStorage.setItem("token", data.access);
-      localStorage.setItem("refreshToken", data.refresh);
+      // Guardar tokens
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
       setToken(data.access);
+      setRefreshToken(data.refresh);
 
-      // 2️⃣ Obtener perfil
-      const userData = await apiFetch("user/profile/", {
-        headers: { Authorization: `Bearer ${data.access}` },
-      });
+      // Cargar perfil usando token recién recibido
+      const perfil = await apiFetch(API_PROFILE, {}, data.access);
+      setUser(perfil);
 
-      setUser(userData);
-      setMensaje(`🎸 ¡Bienvenido/a, ${userData.username || username}!`);
-      return userData;
+      setMensaje(`🎸 Bienvenido, ${perfil.username}!`);
+      return perfil;
     } catch (err) {
-      console.error("Error de login:", err);
-      setMensaje("❌ Usuario o contraseña incorrectos.");
+      console.error(err);
+      setMensaje("❌ Usuario o contraseña incorrectos");
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
+  // REGISTER
   const register = async (username, email, password) => {
     setLoading(true);
     try {
-      const data = await apiFetch("user/register/", {
-        method: "POST",
-        body: JSON.stringify({ username, email, password }),
-      });
+      const data = await apiFetch(
+        API_REGISTER,
+        {
+          method: "POST",
+          body: JSON.stringify({ username, email, password }),
+          skipAuth: true,
+        }
+      );
 
-      setMensaje("🎉 Cuenta creada con éxito, ahora puedes iniciar sesión.");
+      setMensaje("🎉 Usuario creado. Ahora inicia sesión.");
       return data;
     } catch (err) {
-      console.error("Error al registrar:", err);
-      setMensaje(
-        err?.error || "❌ No se pudo conectar con el servidor o respuesta inválida."
-      );
+      console.error(err);
+      setMensaje("❌ Error creando usuario.");
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
+  // LOGOUT
   const logout = () => {
-    setUser(null);
     setToken(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
-    setMensaje("👋 Sesión cerrada correctamente.");
+    setRefreshToken(null);
+    setUser(null);
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+  };
+
+  // REFRESH TOKEN (opcional)
+  const refreshAccessToken = async () => {
+    if (!refreshToken) return;
+    try {
+      const data = await apiFetch(
+        API_REFRESH,
+        {
+          method: "POST",
+          body: JSON.stringify({ refresh: refreshToken }),
+          skipAuth: true,
+        }
+      );
+      localStorage.setItem("access_token", data.access);
+      setToken(data.access);
+      return data.access;
+    } catch (err) {
+      console.log("No se pudo refrescar el token");
+      logout();
+    }
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, login, register, logout, mensaje, setMensaje }}
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        register,
+        logout,
+        mensaje,
+        setMensaje,
+        refreshAccessToken,
+      }}
     >
       {children}
     </AuthContext.Provider>
