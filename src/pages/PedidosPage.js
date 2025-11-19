@@ -16,14 +16,17 @@ export default function PedidosPage() {
 
     const fetchPedidos = async () => {
       try {
-        const data = await apiFetch("/orders/", {
-          method: "GET",
-          token,
-        });
+        const data = await apiFetch("/api/orders/", {}, token); // ✅ token como 3er parámetro
         setPedidos(data);
       } catch (err) {
         console.error("Error al obtener pedidos:", err);
-        setError("No se pudieron cargar los pedidos.");
+        if (err.message.includes("401")) {
+          setError("Tu sesión expiró. Por favor inicia sesión nuevamente.");
+        } else if (err.message.includes("404")) {
+          setError("No se encontró el endpoint de pedidos.");
+        } else {
+          setError("No se pudieron cargar los pedidos.");
+        }
       } finally {
         setLoading(false);
       }
@@ -48,11 +51,14 @@ export default function PedidosPage() {
     if (!isConfirmed) return;
 
     try {
-      await apiFetch(`/orders/${id}/update_status/`, {
-        method: "PATCH",
-        token,
-        body: { status: nuevoEstado },
-      });
+      await apiFetch(
+        `/api/orders/${id}/update_status/`, // ✅ endpoint corregido
+        {
+          method: "PATCH",
+          body: JSON.stringify({ status: nuevoEstado }),
+        },
+        token // ✅ token como 3er parámetro
+      );
 
       setPedidos((prev) =>
         prev.map((p) => (p.id === id ? { ...p, status: nuevoEstado } : p))
@@ -75,7 +81,6 @@ export default function PedidosPage() {
     }
   };
 
-  // Traducción de estados
   const traducirEstado = (status) => {
     switch (status) {
       case "paid":
@@ -95,7 +100,6 @@ export default function PedidosPage() {
   if (!pedidos.length)
     return <p className="text-center mt-5">No hay pedidos registrados.</p>;
 
-  // Admin ve todos los pedidos, usuarios solo los suyos
   const pedidosVisibles = user?.is_staff
     ? pedidos
     : pedidos.filter((p) => p.user === user?.id);
@@ -106,7 +110,6 @@ export default function PedidosPage() {
         {user?.is_staff ? "📋 Panel de Pedidos (Admin)" : "📦 Mis Pedidos"}
       </h2>
 
-      {/* Tabla de pedidos */}
       {user?.is_staff ? (
         <div className="table-responsive">
           <table className="table table-dark table-striped align-middle">
@@ -206,7 +209,6 @@ export default function PedidosPage() {
           </table>
         </div>
       ) : (
-        // Vista de usuario: pedidos individuales
         pedidosVisibles.map((pedido) => (
           <div key={pedido.id} className="card mb-3 shadow-sm border-0">
             <div className="card-body bg-light">

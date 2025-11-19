@@ -31,45 +31,52 @@ export function CarritoProvider({ children }) {
 
   // Cargar pedidos del backend si hay usuario logueado
   useEffect(() => {
-    async function cargarPedidosBackend() {
-      if (!user || !token) return;
+  async function cargarPedidosBackend() {
+    if (!user || !token) return;
 
-      try {
-        const pedidosBackend = await apiFetch("/orders/");
-        setHistorialPedidos(pedidosBackend);
-        localStorage.setItem("pedidos", JSON.stringify(pedidosBackend));
-      } catch (error) {
-        console.error("Error cargando pedidos:", error);
+    try {
+      // ✅ Endpoint corregido
+      const pedidosBackend = await apiFetch("/api/orders/", {}, token);
+      setHistorialPedidos(pedidosBackend);
+      localStorage.setItem("pedidos", JSON.stringify(pedidosBackend));
+    } catch (error) {
+      console.error("Error cargando pedidos:", error);
+
+      // 401 -> Token inválido
+      if (error.message.includes("401")) {
+        alert("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        setHistorialPedidos([]);
       }
     }
-    cargarPedidosBackend();
-  }, [user, token]);
+  }
+
+  cargarPedidosBackend();
+}, [user, token]);
 
   // --------------------------------------
-  // AGREGAR AL CARRITO — VERSION CORREGIDA
+  // AGREGAR AL CARRITO
   // --------------------------------------
-const agregarAlCarrito = (producto) => {
-  const item = {
-    id: producto.id,
-    name: producto.name || producto.nombre,
-    price: producto.price || producto.precio,
-    image: producto.image || producto.imagen,
-    quantity: 1,
+  const agregarAlCarrito = (producto) => {
+    const item = {
+      id: producto.id,
+      name: producto.name || producto.nombre,
+      price: producto.price || producto.precio,
+      image: producto.image || producto.imagen,
+      quantity: 1,
+    };
+
+    setCarrito((prev) => {
+      const existente = prev.find((p) => p.id === item.id);
+      if (existente) {
+        return prev.map((p) =>
+          p.id === item.id ? { ...p, quantity: p.quantity + 1 } : p
+        );
+      }
+      return [...prev, item];
+    });
   };
-
-  setCarrito((prev) => {
-    const existente = prev.find((p) => p.id === item.id);
-
-    if (existente) {
-      return prev.map((p) =>
-        p.id === item.id ? { ...p, quantity: p.quantity + 1 } : p
-      );
-    }
-
-    return [...prev, item];
-  });
-};
-
 
   // Eliminar del carrito
   const eliminarDelCarrito = (idProducto) => {
@@ -80,26 +87,19 @@ const agregarAlCarrito = (producto) => {
   const limpiarCarrito = () => setCarrito([]);
 
   // --------------------------------------
-  // REGISTRAR PEDIDO — VERSION CORREGIDA
+  // REGISTRAR PEDIDO
   // --------------------------------------
-const registrarPedido = async (shippingData) => {
+  const registrarPedido = async (shippingData) => {
   if (carrito.length === 0) {
     return { ok: false, message: "⚠️ El carrito está vacío." };
   }
 
   if (!user || !token) {
-    const nuevoPedido = {
-      id: Date.now(),
-      items: carrito,
-      fecha: new Date().toLocaleString(),
-      total: carrito.reduce((acc, item) => acc + item.price * item.quantity, 0),
-      origen: "local",
-      shipping: shippingData || {},
+    return {
+      ok: false,
+      message:
+        "❌ Debes iniciar sesión para registrar tu pedido y que el admin pueda verlo."
     };
-
-    setHistorialPedidos((prev) => [...prev, nuevoPedido]);
-    limpiarCarrito();
-    return { ok: true, pedido: nuevoPedido, message: "Pedido guardado localmente." };
   }
 
   try {
@@ -110,10 +110,10 @@ const registrarPedido = async (shippingData) => {
       price: item.price,
     }));
 
-    const response = await apiFetch("/orders/", {
+    const response = await apiFetch("/api/orders/", {
       method: "POST",
       body: JSON.stringify({ ...shippingData, items: itemsBackend }),
-    });
+    }, token);
 
     const nuevoPedido = { ...response, origen: "backend" };
     setHistorialPedidos((prev) => [...prev, nuevoPedido]);

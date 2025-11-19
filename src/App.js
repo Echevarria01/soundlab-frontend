@@ -10,7 +10,7 @@ import PedidosPage from "./pages/PedidosPage";
 import PedidosAdmin from "./pages/PedidosAdmin";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import ConfirmacionCompra from "./pages/ConfirmacionCompra"; // ✅ NUEVO IMPORT
+import ConfirmacionCompra from "./pages/ConfirmacionCompra";
 import Footer from "./components/Footer";
 import { apiFetch } from "./api";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -33,30 +33,35 @@ function AdminRoute({ children }) {
 // -------------------- CARGA DE PRODUCTOS --------------------
 function ProductosLoader() {
   const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProductos = async () => {
       try {
-        const data = await apiFetch("/products/");
+        // ✅ Endpoint corregido
+        const data = await apiFetch("/store/");
         setProductos(
           data.map((item) => ({
             id: item.id,
-            nombre: item.name,
-            precio: parseFloat(item.price),
+            nombre: item.name || item.nombre,
+            precio: parseFloat(item.price || item.precio),
             categoria: item.category?.name,
-            imagen: item.image,
+            imagen: item.image || item.imagen,
           }))
         );
       } catch (error) {
         console.error("Error al cargar productos:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProductos();
   }, []);
 
+  if (loading) return <p>Cargando productos...</p>;
+
   return <Productos productos={productos} />;
 }
-
 
 // -------------------- APP PRINCIPAL --------------------
 function App() {
@@ -75,7 +80,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/productos" element={<ProductosLoader />} />
 
-                {/* 🛒 Solo usuarios logueados pueden hacer checkout */}
+                {/* 🛒 Checkout */}
                 <Route
                   path="/checkout"
                   element={
@@ -85,7 +90,7 @@ function App() {
                   }
                 />
 
-                {/* ✅ NUEVA RUTA DE CONFIRMACIÓN DE COMPRA */}
+                {/* ✅ Confirmación de compra */}
                 <Route
                   path="/confirmacion-compra"
                   element={
@@ -105,7 +110,7 @@ function App() {
                   }
                 />
 
-                {/* 🔒 Solo admins pueden ver el panel de pedidos */}
+                {/* 🔒 Admin */}
                 <Route
                   path="/admin/pedidos"
                   element={
@@ -133,6 +138,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
